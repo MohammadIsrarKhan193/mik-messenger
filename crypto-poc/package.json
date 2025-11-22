@@ -1,0 +1,13 @@
+{
+  "name": "signal-poc",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "run": "node -r ts-node/register src/demo.js"
+  },
+  "dependencies": {
+    "libsignal-protocol-typescript": "^0.0.68",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  }
+}
