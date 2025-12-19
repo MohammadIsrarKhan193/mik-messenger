@@ -16,13 +16,13 @@ function join() {
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
     const box = document.getElementById("messages");
-    box.innerHTML += `<div><b>${msg.user}:</b> ${msg.text}</div>`;
+    box.innerHTML += `<div><b>${msg.user}:</b> ${msg.message}</div>`;
     box.scrollTop = box.scrollHeight;
   };
 }
 
 function send() {
   const input = document.getElementById("msg");
-  ws.send(JSON.stringify({ type: "msg", text: input.value }));
+  ws.send(JSON.stringify({ type: "msg", message: input.value }));
   input.value = "";
 }
