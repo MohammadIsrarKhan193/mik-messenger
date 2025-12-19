@@ -17,26 +17,26 @@ function setupWSServer(server) {
         return;
       }
 
-      // USER JOIN
+      // JOIN
       if (msg.type === "join") {
         ws.room = msg.room || "global";
-        users.set(ws, msg.username);
+        users.set(ws, msg.user);
 
         if (!rooms[ws.room]) rooms[ws.room] = new Set();
         rooms[ws.room].add(ws);
 
         broadcast(ws.room, {
           type: "system",
-          text: `${msg.username} joined ${ws.room}`,
+          message: `${msg.user} joined ${ws.room}`,
         });
       }
 
-      // ROOM MESSAGE
-      if (msg.type === "message") {
+      // MESSAGE
+      if (msg.type === "msg") {
         broadcast(ws.room, {
-          type: "message",
+          type: "msg",
           user: users.get(ws),
-          text: msg.text,
+          message: msg.message,
         });
       }
     });
@@ -51,7 +51,7 @@ function setupWSServer(server) {
       if (username) {
         broadcast(room, {
           type: "system",
-          text: `${username} left the chat`,
+          message: `${username} left the chat`,
         });
       }
     });
