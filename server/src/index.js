@@ -6,50 +6,53 @@ const WebSocket = require('ws');
 
 const PORT = process.env.PORT || 10000;
 const server = http.createServer();
-
 const wss = new WebSocket.Server({ server });
 
 // username => ws
 const users = new Map();
 
+function broadcastUsers() {
+  const userList = Array.from(users.keys());
+
+  const message = JSON.stringify({
+    type: 'users',
+    users: userList
+  });
+
+  users.forEach(ws => ws.send(message));
+}
+
 wss.on('connection', (ws) => {
   let currentUser = null;
 
   ws.on('message', (data) => {
-    try {
-      const msg = JSON.parse(data);
+    const msg = JSON.parse(data);
 
-      // USER JOIN
-      if (msg.type === 'join') {
-        currentUser = msg.username;
-        users.set(currentUser, ws);
+    // JOIN
+    if (msg.type === 'join') {
+      currentUser = msg.username;
+      users.set(currentUser, ws);
+      broadcastUsers();
+      return;
+    }
 
-        console.log(`${currentUser} connected`);
-        return;
+    // PRIVATE MESSAGE
+    if (msg.type === 'dm') {
+      const target = users.get(msg.to);
+      if (target) {
+        target.send(JSON.stringify({
+          type: 'dm',
+          from: currentUser,
+          text: msg.text
+        }));
       }
-
-      // PRIVATE MESSAGE
-      if (msg.type === 'dm') {
-        const targetSocket = users.get(msg.to);
-
-        if (targetSocket) {
-          targetSocket.send(JSON.stringify({
-            type: 'dm',
-            from: currentUser,
-            text: msg.text
-          }));
-        }
-      }
-
-    } catch (err) {
-      console.error('Invalid message', err);
     }
   });
 
   ws.on('close', () => {
     if (currentUser) {
       users.delete(currentUser);
-      console.log(`${currentUser} disconnected`);
+      broadcastUsers();
     }
   });
 });
