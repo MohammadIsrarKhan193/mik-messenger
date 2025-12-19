@@ -14,7 +14,9 @@ function join() {
   };
 
   ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
+  console.log("RAW FROM SERVER:", e.data);
+  const msg = JSON.parse(e.data);
+  console.log("PARSED:", msg);
     const box = document.getElementById("messages");
     box.innerHTML += `<div><b>${msg.user}:</b> ${msg.message}</div>`;
     box.scrollTop = box.scrollHeight;
