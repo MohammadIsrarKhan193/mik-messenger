@@ -1,57 +1,60 @@
-let ws;
-let username;
-let room = "global";
+const joinBtn = document.getElementById("joinBtn");
+const usernameInput = document.getElementById("username");
 
-function join() {
-  username = document.getElementById("username").value.trim();
-  if (!username) return alert("Enter username");
+const joinBox = document.getElementById("joinBox");
+const chatBox = document.getElementById("chatBox");
+const messages = document.getElementById("messages");
+const msgInput = document.getElementById("msgInput");
+const sendBtn = document.getElementById("sendBtn");
 
-  ws = new WebSocket("wss://mik-messenger.onrender.com");
+// CHANGE THIS TO YOUR BACKEND URL
+const socket = new WebSocket("https://mik-messenger-1.onrender.com");
 
-  ws.onopen = () => {
-    ws.send(
-      JSON.stringify({
-        type: "join",
-        username,
-        room,
-      })
-    );
+let username = "";
 
-    document.getElementById("joinBox").style.display = "none";
-    document.getElementById("chat").style.display = "block";
+joinBtn.addEventListener("click", () => {
+  username = usernameInput.value.trim();
+
+  if (!username) {
+    alert("Enter your name");
+    return;
+  }
+
+  joinBox.style.display = "none";
+  chatBox.style.display = "flex";
+
+  socket.onopen = () => {
+    socket.send(JSON.stringify({
+      type: "join",
+      username
+    }));
   };
+});
 
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    const box = document.getElementById("messages");
+sendBtn.addEventListener("click", sendMessage);
+msgInput.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") sendMessage();
+});
 
-    if (msg.type === "message") {
-      box.innerHTML += `<div><b>${msg.user}:</b> ${msg.text}</div>`;
-    }
+function sendMessage() {
+  const text = msgInput.value.trim();
+  if (!text) return;
 
-    if (msg.type === "system") {
-      box.innerHTML += `<div style="color:gray"><i>${msg.text}</i></div>`;
-    }
+  socket.send(JSON.stringify({
+    type: "message",
+    username,
+    text
+  }));
 
-    box.scrollTop = box.scrollHeight;
-  };
-}
-if (msg.type === "history") {
-  msg.messages.forEach((m) => {
-    messages.innerHTML += `<div><b>${m.user}:</b> ${m.text}</div>`;
-  });
+  msgInput.value = "";
 }
 
-function sendMsg() {
-  const input = document.getElementById("msg");
-  if (!input.value) return;
+socket.onmessage = (event) => {
+  const data = JSON.parse(event.data);
 
-  ws.send(
-    JSON.stringify({
-      type: "message",
-      text: input.value,
-    })
-  );
+  const div = document.createElement("div");
+  div.textContent = `${data.username}: ${data.text}`;
+  messages.appendChild(div);
 
-  input.value = "";
-}
+  messages.scrollTop = messages.scrollHeight;
+};
