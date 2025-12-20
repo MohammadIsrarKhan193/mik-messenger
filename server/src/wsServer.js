@@ -1,12 +1,15 @@
 const WebSocket = require("ws");
 
-const rooms = {};
-const users = new Map();
+const rooms = {};              // room -> Set(ws)
+const users = new Map();       // ws -> username
+const history = {};            // room -> [{ user, text }]
 
 function setupWSServer(server) {
   const wss = new WebSocket.Server({ server });
 
   wss.on("connection", (ws) => {
+    console.log("🔌 Client connected");
+
     ws.on("message", (data) => {
       let msg;
       try {
@@ -15,41 +18,58 @@ function setupWSServer(server) {
         return;
       }
 
-      // JOIN
+      // 🔑 JOIN
       if (msg.type === "join") {
         ws.room = msg.room || "global";
-        users.set(ws, msg.username);
+        users.set(ws, msg.user);
 
         if (!rooms[ws.room]) rooms[ws.room] = new Set();
+        if (!history[ws.room]) history[ws.room] = [];
+
         rooms[ws.room].add(ws);
+
+        // 📜 Send old messages
+        ws.send(
+          JSON.stringify({
+            type: "history",
+            messages: history[ws.room],
+          })
+        );
 
         broadcast(ws.room, {
           type: "system",
-          text: `${msg.username} joined ${ws.room}`,
+          text: `${msg.user} joined ${ws.room}`,
         });
       }
 
-      // MESSAGE
-      if (msg.type === "message") {
-        broadcast(ws.room, {
-          type: "message",
+      // 💬 MESSAGE
+      if (msg.type === "msg") {
+        const message = {
           user: users.get(ws),
-          text: msg.text,
+          text: msg.message,
+        };
+
+        history[ws.room].push(message);
+
+        broadcast(ws.room, {
+          type: "msg",
+          user: message.user,
+          message: message.text,
         });
       }
     });
 
     ws.on("close", () => {
-      const username = users.get(ws);
+      const user = users.get(ws);
       const room = ws.room;
 
       if (room && rooms[room]) rooms[room].delete(ws);
       users.delete(ws);
 
-      if (username) {
+      if (user) {
         broadcast(room, {
           type: "system",
-          text: `${username} left the chat`,
+          text: `${user} left the chat`,
         });
       }
     });
