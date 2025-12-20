@@ -36,6 +36,11 @@ function join() {
     box.scrollTop = box.scrollHeight;
   };
 }
+if (msg.type === "history") {
+  msg.messages.forEach((m) => {
+    messages.innerHTML += `<div><b>${m.user}:</b> ${m.text}</div>`;
+  });
+}
 
 function sendMsg() {
   const input = document.getElementById("msg");
