@@ -25,8 +25,8 @@ function join() {
     const msg = JSON.parse(e.data);
     const box = document.getElementById("messages");
 
-    if (msg.type === "msg") {
-      box.innerHTML += `<div><b>${msg.user}:</b> ${msg.message}</div>`;
+    if (msg.type === "message") {
+  box.innerHTML += `<div><b>${msg.user}:</b> ${msg.text}</div>`;
     }
 
     if (msg.type === "system") {
