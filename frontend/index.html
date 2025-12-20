@@ -1,24 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>MÎK Messenger</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-
-<h2>🔥 MÎK Messenger</h2>
-
 <div id="joinBox">
-  <input id="username" placeholder="Enter username" />
-  <button onclick="join()">Join</button>
+  <input id="username" placeholder="Enter name" />
+  <button id="joinBtn">Join</button>
 </div>
 
-<div id="chat" style="display:none">
-  <div id="messages" style="height:300px; overflow:auto; border:1px solid gray;"></div>
-  <input id="msg" placeholder="Type message..." />
-  <button onclick="sendMsg()">Send</button>
+<div id="chatBox" style="display:none;">
+  <div id="messages"></div>
+
+  <input id="msgInput" placeholder="Type message" />
+  <button id="sendBtn">Send</button>
 </div>
 
 <script src="app.js"></script>
-</body>
-</html>
