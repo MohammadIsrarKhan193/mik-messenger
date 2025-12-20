@@ -1,13 +1,13 @@
 {
   "name": "mik-messenger-server",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "main": "src/index.js",
   "scripts": {
-    "start": "node server/src/index.js"
+    "start": "node src/index.js"
   },
   "dependencies": {
-    "ws": "^8.13.0",
-    "uuid": "^9.0.0",
-    "dotenv": "^16.0.0"
+    "ws": "^8.16.0",
+    "mongoose": "^8.0.0",
+    "dotenv": "^16.4.5"
   }
 }
