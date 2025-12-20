@@ -1,8 +1,8 @@
 const WebSocket = require("ws");
+const Message = require("./models/Message");
 
-const rooms = {};              // room -> Set(ws)
-const users = new Map();       // ws -> username
-const history = {};            // room -> [{ user, text }]
+const rooms = {};
+const users = new Map();
 
 function setupWSServer(server) {
   const wss = new WebSocket.Server({ server });
@@ -10,7 +10,7 @@ function setupWSServer(server) {
   wss.on("connection", (ws) => {
     console.log("🔌 Client connected");
 
-    ws.on("message", (data) => {
+    ws.on("message", async (data) => {
       let msg;
       try {
         msg = JSON.parse(data.toString());
@@ -18,43 +18,47 @@ function setupWSServer(server) {
         return;
       }
 
-      // 🔑 JOIN
+      // JOIN ROOM
       if (msg.type === "join") {
         ws.room = msg.room || "global";
         users.set(ws, msg.user);
 
         if (!rooms[ws.room]) rooms[ws.room] = new Set();
-        if (!history[ws.room]) history[ws.room] = [];
-
         rooms[ws.room].add(ws);
 
-        // 📜 Send old messages
+        // Send chat history
+        const history = await Message.find({ room: ws.room })
+          .sort({ createdAt: 1 })
+          .limit(50);
+
         ws.send(
           JSON.stringify({
             type: "history",
-            messages: history[ws.room],
+            messages: history.map((m) => ({
+              user: m.user,
+              text: m.text,
+            })),
           })
         );
 
         broadcast(ws.room, {
           type: "system",
-          text: `${msg.user} joined ${ws.room}`,
+          message: `${msg.user} joined ${ws.room}`,
         });
       }
 
-      // 💬 MESSAGE
+      // NEW MESSAGE
       if (msg.type === "msg") {
-        const message = {
+        const saved = await Message.create({
+          room: ws.room,
           user: users.get(ws),
           text: msg.message,
-        };
-
-        history[ws.room].push(message);
+        });
 
         broadcast(ws.room, {
           type: "msg",
-          user: message.user,
-          message: message.text,
+          user: saved.user,
+          message: saved.text,
         });
       }
     });
@@ -69,7 +73,7 @@ function setupWSServer(server) {
       if (user) {
         broadcast(room, {
           type: "system",
-          text: `${user} left the chat`,
+          message: `${user} left the chat`,
         });
       }
     });
@@ -78,8 +82,8 @@ function setupWSServer(server) {
 
 function broadcast(room, message) {
   if (!rooms[room]) return;
-
   const data = JSON.stringify(message);
+
   rooms[room].forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(data);
