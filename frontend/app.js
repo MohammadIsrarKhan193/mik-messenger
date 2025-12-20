@@ -53,8 +53,16 @@ socket.onmessage = (event) => {
   const data = JSON.parse(event.data);
 
   const div = document.createElement("div");
-  div.textContent = `${data.username}: ${data.text}`;
-  messages.appendChild(div);
+div.classList.add("msg");
+
+if (data.username === username) {
+  div.classList.add("you");
+} else {
+  div.classList.add("other");
+}
+
+div.innerHTML = `<b>${data.username}</b><br>${data.text}`;
+messages.appendChild(div);
 
   messages.scrollTop = messages.scrollHeight;
 };
