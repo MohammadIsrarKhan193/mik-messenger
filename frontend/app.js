@@ -1,10 +1,10 @@
 let ws;
-let user;
+let username;
 let room = "global";
 
 function join() {
-  user = document.getElementById("username").value.trim();
-  if (!user) return alert("Enter username");
+  username = document.getElementById("username").value.trim();
+  if (!username) return alert("Enter username");
 
   ws = new WebSocket("wss://mik-messenger.onrender.com");
 
@@ -12,8 +12,8 @@ function join() {
     ws.send(
       JSON.stringify({
         type: "join",
-        user: user,
-        room: room,
+        username,
+        room,
       })
     );
 
@@ -26,11 +26,11 @@ function join() {
     const box = document.getElementById("messages");
 
     if (msg.type === "message") {
-  box.innerHTML += `<div><b>${msg.user}:</b> ${msg.text}</div>`;
+      box.innerHTML += `<div><b>${msg.user}:</b> ${msg.text}</div>`;
     }
 
     if (msg.type === "system") {
-      box.innerHTML += `<div style="color:gray"><i>${msg.message}</i></div>`;
+      box.innerHTML += `<div style="color:gray"><i>${msg.text}</i></div>`;
     }
 
     box.scrollTop = box.scrollHeight;
@@ -43,8 +43,8 @@ function sendMsg() {
 
   ws.send(
     JSON.stringify({
-      type: "msg",
-      message: input.value,
+      type: "message",
+      text: input.value,
     })
   );
 
