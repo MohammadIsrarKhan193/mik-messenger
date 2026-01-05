@@ -1,93 +1,89 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: Arial, sans-serif;
+:root {
+  --bg-dark: #0b141a;
+  --header-bg: #202c33;
+  --my-msg: #005c4b;
+  --other-msg: #202c33;
+  --text-main: #e9edef;
+  --accent: #00a884;
 }
 
-body {
-  background: #0b141a;
-  color: white;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+body, html {
+  height: 100%; margin: 0;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
 }
 
-/* HEADER */
+#chatBox { display: flex; flex-direction: column; height: 100vh; }
+
 .header {
-  background: #202c33;
-  padding: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.profile {
+  background: var(--header-bg);
+  padding: 10px 16px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  z-index: 10;
 }
 
-.profile img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
+.profile img { width: 40px; height: 40px; border-radius: 50%; margin-right: 15px; }
 
-/* CHAT AREA */
-.chat-box {
+.chat-area {
   flex: 1;
-  padding: 10px;
   overflow-y: auto;
-  background: #0b141a;
+  background-color: #0b141a;
+  background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+  background-repeat: repeat;
+  background-size: 400px;
+  padding: 20px;
 }
 
-.messages {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+.messages { display: flex; flex-direction: column; gap: 8px; }
 
-/* CHAT BUBBLES */
 .msg {
-  max-width: 75%;
+  max-width: 85%;
   padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 14px;
+  border-radius: 8px;
+  position: relative;
+  font-size: 15px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 .msg.you {
   align-self: flex-end;
-  background: #005c4b;
+  background: var(--my-msg);
+  border-top-right-radius: 0;
 }
 
 .msg.other {
   align-self: flex-start;
-  background: #202c33;
+  background: var(--other-msg);
+  border-top-left-radius: 0;
 }
 
-/* INPUT BAR */
 .input-bar {
-  background: #202c33;
-  padding: 8px;
+  background: var(--header-bg);
+  padding: 10px;
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  align-items: center;
 }
 
 .input-bar input {
   flex: 1;
-  padding: 10px;
-  border-radius: 20px;
+  background: #2a3942;
   border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  color: white;
   outline: none;
 }
 
 .input-bar button {
-  background: #00a884;
-  border: none;
+  background: var(--accent);
   color: white;
-  padding: 0 15px;
+  border: none;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
 }
