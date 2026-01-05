@@ -3,48 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MÎK Messenger</title>
-
-  <!-- CSS -->
+  <title>MÎK Messenger v1</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
-  <!-- JOIN SCREEN -->
   <div id="joinBox" class="join-box">
-    <h2> MÎK Messenger</h2>
-    <input id="username" placeholder="Enter your name" />
-    <button id="joinBtn">Join</button>
+    <h1 style="color: #00a884; margin-bottom: 10px;">MÎK</h1>
+    <p style="color: #8696a0; margin-bottom: 20px;">International Messenger</p>
+    <input id="username" placeholder="Enter your full name" />
+    <button id="joinBtn">START MESSAGING</button>
   </div>
 
-  <!-- CHAT SCREEN -->
   <div id="chatBox" style="display:none;">
-
-    <!-- HEADER -->
     <div class="header">
       <div class="profile">
-        <img src="https://i.imgur.com/1X6R9xF.png" />
-        <span>MÎK Messenger</span>
+        <img src="https://i.imgur.com/1X6R9xF.png" alt="Profile" />
+        <div>
+          <div style="font-weight: bold;">MÎK Global Group</div>
+          <div id="status" style="font-size: 12px; color: #00a884;">connecting...</div>
+        </div>
       </div>
       <div class="icons">⋮</div>
     </div>
 
-    <!-- MESSAGES -->
-    <div class="chat-box">
+    <div class="chat-area">
       <div id="messages" class="messages"></div>
     </div>
 
-    <!-- INPUT -->
     <div class="input-bar">
-      <input id="msgInput" placeholder="Type a message…" />
+      <input id="msgInput" placeholder="Type a message..." />
       <button id="sendBtn">➤</button>
     </div>
-
   </div>
 
-  <!-- JS -->
   <script src="app.js"></script>
-
 </body>
 </html>
