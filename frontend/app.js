@@ -1,92 +1,56 @@
+// PASTE YOUR REAL CONFIG HERE FROM FIREBASE SETTINGS
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "YOUR_DATABASE_URL", // Found in Realtime Database tab
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSy...", 
+  authDomain: "your-project.firebaseapp.com",
+  databaseURL: "https://your-project-rtdb.firebaseio.com",
+  projectId: "your-project",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:12345:web:abcde"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
-let confirmResult;
 let myPhone = "";
 let activeChatId = null;
 
-// --- AUTH LOGIC ---
-function sendOTP() {
-  const phone = document.getElementById('phoneNumber').value;
-  const verifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { size: 'invisible' });
-  
-  auth.signInWithPhoneNumber(phone, verifier).then(result => {
-    confirmResult = result;
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('otpScreen').style.display = 'block';
-  }).catch(err => alert(err.message));
+// TYPING INDICATOR LOGIC
+function setTyping(isTyping) {
+    if (!activeChatId) return;
+    db.ref(`typing/${activeChatId}/${myPhone.replace('+','')}`).set(isTyping);
 }
 
-function verifyOTP() {
-  const code = document.getElementById('otpCode').value;
-  confirmResult.confirm(code).then(result => {
-    myPhone = result.user.phoneNumber;
-    // Save user to DB
-    db.ref('users/' + myPhone.replace('+', '')).set({ phone: myPhone, lastSeen: Date.now() });
-    startApp();
-  }).catch(err => alert("Invalid Code"));
+// Listen for typing
+function listenForTyping(chatId) {
+    db.ref(`typing/${chatId}`).on('value', snapshot => {
+        const data = snapshot.val();
+        let someoneTyping = false;
+        if (data) {
+            Object.keys(data).forEach(user => {
+                if (user !== myPhone.replace('+','') && data[user] === true) {
+                    someoneTyping = true;
+                }
+            });
+        }
+        document.getElementById('chatStatus').innerText = someoneTyping ? "typing..." : "online";
+    });
 }
 
-// --- CHAT LOGIC ---
-function startApp() {
-  document.getElementById('authFlow').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'block';
-  loadMyChats();
-}
+// Update the message input to trigger typing
+document.getElementById('msgInput').addEventListener('input', () => {
+    setTyping(true);
+    // Stop typing after 2 seconds of no input
+    clearTimeout(window.typingTimer);
+    window.typingTimer = setTimeout(() => setTyping(false), 2000);
+});
 
-function showSearchPrompt() {
-  const target = prompt("Enter phone number to chat (with +code):");
-  if(target) openChat(target);
-}
-
+// Update openChat to include the listener
 function openChat(targetPhone) {
-  activeChatId = [myPhone.replace('+',''), targetPhone.replace('+','')].sort().join("_");
-  document.getElementById('listScreen').style.display = 'none';
-  document.getElementById('chatScreen').style.display = 'flex';
-  document.getElementById('activeChatName').innerText = targetPhone;
-  
-  // Listen for real-time messages
-  db.ref('messages/' + activeChatId).on('value', snapshot => {
-    const data = snapshot.val();
-    const area = document.getElementById('messageArea');
-    area.innerHTML = "";
-    if(data) {
-      Object.values(data).forEach(msg => {
-        const div = document.createElement('div');
-        div.className = `msg ${msg.sender === myPhone ? 'you' : 'other'}`;
-        div.innerHTML = `<div>${msg.text}</div>`;
-        area.appendChild(div);
-      });
-      area.scrollTop = area.scrollHeight;
-    }
-  });
-}
-
-function sendMessage() {
-  const text = document.getElementById('msgInput').value;
-  if(!text) return;
-
-  db.ref('messages/' + activeChatId).push({
-    sender: myPhone,
-    text: text,
-    time: Date.now()
-  });
-  document.getElementById('msgInput').value = "";
-}
-
-function backToList() {
-  document.getElementById('chatScreen').style.display = 'none';
-  document.getElementById('listScreen').style.display = 'block';
+    activeChatId = [myPhone.replace('+',''), targetPhone.replace('+','')].sort().join("_");
+    showScreen('chatScreen');
+    document.getElementById('activeChatName').innerText = targetPhone;
+    listenForTyping(activeChatId);
+    // ... (rest of your existing openChat message loading logic)
 }
