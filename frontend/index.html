@@ -1,66 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MÎK Messenger v1 Pro</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MÎK Messenger</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <div id="authFlow">
-    <div id="loginScreen" class="screen auth-screen">
-      <h1 class="logo">MÎK</h1>
-      <div id="recaptcha-container"></div>
-      <div class="input-group">
-        <input type="text" id="phoneNumber" placeholder="+92 300 1234567">
-      </div>
-      <button class="primary-btn blue" onclick="sendOTP()">Send SMS OTP</button>
+    <div id="splashScreen" class="screen full-center">
+        <div class="logo-animation">MÎK</div>
+        <p>Your World, Your Message</p>
     </div>
 
-    <div id="otpScreen" class="screen auth-screen" style="display:none;">
-      <h3>Verify Phone</h3>
-      <input type="number" id="otpCode" placeholder="Enter 6-digit code">
-      <button class="primary-btn green" onclick="verifyOTP()">Verify</button>
-    </div>
-  </div>
-
-  <div id="mainApp" style="display:none;">
-    <div id="listScreen" class="screen">
-      <div class="header">
-        <span>MÎK Messenger</span>
-        <div class="header-icons">🔍 ⋮</div>
-      </div>
-      <div class="tabs">
-        <div class="tab active">CHATS</div>
-        <div class="tab">STATUS</div>
-        <div class="tab">CALLS</div>
-      </div>
-      <div id="chatsContainer" class="chat-list">
+    <div id="authScreen" class="screen full-center" style="display:none;">
+        <div class="auth-box">
+            <h2>Welcome to MÎK</h2>
+            <div id="recaptcha-container"></div>
+            <input type="tel" id="phoneNumber" placeholder="+93 78 966 2146">
+            <button id="sendOtpBtn">Get SMS Code</button>
+            
+            <div id="otpInputArea" style="display:none;">
+                <input type="number" id="otpCode" placeholder="Enter 6-digit OTP">
+                <button id="verifyOtpBtn">Verify & Enter</button>
+            </div>
         </div>
-      <button class="fab" onclick="showSearchPrompt()">💬</button>
     </div>
 
-    <div id="chatScreen" class="screen" style="display:none;">
-      <div class="header">
-        <button onclick="backToList()" class="back-btn">←</button>
-        <div class="profile-info">
-          <div id="activeChatName">User Name</div>
-          <div class="status">online</div>
+    <div id="mainApp" class="screen" style="display:none;">
+        <div class="app-header">
+            <div class="user-profile">
+                <img id="myAvatar" src="https://via.placeholder.com/40" class="avatar">
+                <span id="myName">User</span>
+            </div>
+            <div class="header-icons">🔍 ⋮</div>
         </div>
-      </div>
-      <div id="messageArea" class="chat-area"></div>
-      <div class="input-bar">
-        <button class="icon-btn">📎</button>
-        <input type="text" id="msgInput" placeholder="Message">
-        <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
-      </div>
-    </div>
-  </div>
+        
+        <div class="tabs">
+            <div class="tab active">CHATS</div>
+            <div class="tab">STATUS</div>
+            <div class="tab">CALLS</div>
+        </div>
 
-  <script src="app.js"></script>
+        <div id="chatList" class="chat-list">
+            </div>
+
+        <button class="fab" id="newChatBtn">+</button>
+    </div>
+
+    <script type="module" src="app.js"></script>
 </body>
 </html>
