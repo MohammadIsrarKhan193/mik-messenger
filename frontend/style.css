@@ -1,56 +1,44 @@
 :root {
-  --wa-dark-bg: #0b141a;
-  --wa-header: #202c33;
-  --wa-accent: #00a884;
-  --wa-text: #e9edef;
-  --wa-msg-me: #005c4b;
-  --wa-msg-them: #233138;
+    --primary: #00a884;
+    --dark-bg: #111b21;
+    --dark-header: #202c33;
+    --text-white: #e9edef;
 }
 
-/* Make it feel like a real App */
 body {
-  background-color: var(--wa-dark-bg);
-  color: var(--wa-text);
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  overflow: hidden; /* No scrollbars on the main screen */
+    margin: 0; background-color: var(--dark-bg);
+    color: var(--text-white); font-family: 'Segoe UI', sans-serif;
 }
 
-/* Professional Chat Bubbles */
-.msg {
-  max-width: 75%;
-  padding: 8px 12px;
-  border-radius: 12px;
-  margin-bottom: 4px;
-  font-size: 14.5px;
-  position: relative;
-  box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+.screen { height: 100vh; width: 100%; display: flex; flex-direction: column; }
+.full-center { align-items: center; justify-content: center; text-align: center; }
+
+/* Splash Screen */
+.logo-animation {
+    font-size: 80px; font-weight: bold; color: var(--primary);
+    text-shadow: 0 0 20px rgba(0, 168, 132, 0.5);
 }
 
-.msg.you {
-  background-color: var(--wa-msg-me);
-  align-self: flex-end;
-  border-top-right-radius: 2px;
+/* Auth Box */
+.auth-box { background: var(--dark-header); padding: 40px; border-radius: 20px; width: 80%; max-width: 400px; }
+input { 
+    width: 100%; padding: 12px; margin: 10px 0; background: #2a3942; 
+    border: none; color: white; border-radius: 8px; box-sizing: border-box;
+}
+button { 
+    width: 100%; padding: 12px; background: var(--primary); 
+    border: none; color: #111b21; font-weight: bold; border-radius: 8px; cursor: pointer;
 }
 
-.msg.other {
-  background-color: var(--wa-msg-them);
-  align-self: flex-start;
-  border-top-left-radius: 2px;
-}
+/* App Header */
+.app-header { background: var(--dark-header); padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+.avatar { width: 40px; height: 40px; border-radius: 50%; }
+.tabs { display: flex; background: var(--dark-header); border-bottom: 1px solid #2a3942; }
+.tab { flex: 1; text-align: center; padding: 15px; color: #8696a0; font-weight: bold; }
+.tab.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
 
-/* Floating Action Button like your screenshot */
 .fab {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  background-color: var(--wa-accent);
-  color: #111b21;
-  width: 56px;
-  height: 56px;
-  border-radius: 16px; /* Modern WA squircle shape */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+    background: var(--primary); color: #111b21; font-size: 30px;
+    border: none; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
