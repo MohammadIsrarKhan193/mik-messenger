@@ -3,28 +3,44 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MÎK Messenger v1</title>
+  <title>MÎK Messenger v1 Pro</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
   <div id="joinBox" class="join-box">
-    <h1 style="color: #00a884; margin-bottom: 10px;">MÎK</h1>
-    <p style="color: #8696a0; margin-bottom: 20px;">International Messenger</p>
+    <h1 class="logo">MÎK</h1>
+    <p>International Messenger</p>
     <input id="username" placeholder="Enter your full name" />
     <button id="joinBtn">START MESSAGING</button>
   </div>
 
-  <div id="chatBox" style="display:none;">
+  <div id="mainInterface" style="display:none;">
     <div class="header">
-      <div class="profile">
-        <img src="https://i.imgur.com/1X6R9xF.png" alt="Profile" />
-        <div>
-          <div style="font-weight: bold;">MÎK Global Group</div>
-          <div id="status" style="font-size: 12px; color: #00a884;">connecting...</div>
-        </div>
+      <div class="logo-small">MÎK Messenger</div>
+      <div class="top-icons">🔍 ⋮</div>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active">Chats</div>
+      <div class="tab">Updates</div>
+      <div class="tab">Calls</div>
+    </div>
+
+    <div id="chatList" class="chat-list">
       </div>
-      <div class="icons">⋮</div>
+
+    <button class="fab" onclick="alert('Search feature coming soon!')">💬</button>
+  </div>
+
+  <div id="conversationScreen" style="display:none;">
+    <div class="header">
+      <button onclick="backToMain()" class="back-btn">←</button>
+      <div class="profile">
+        <img src="https://i.imgur.com/1X6R9xF.png" alt="User" />
+        <div id="chatWith">Recipient Name</div>
+      </div>
+      <div class="top-icons">📞 🎥 ⋮</div>
     </div>
 
     <div class="chat-area">
@@ -32,6 +48,7 @@
     </div>
 
     <div class="input-bar">
+      <button class="attach-btn">📎</button>
       <input id="msgInput" placeholder="Type a message..." />
       <button id="sendBtn">➤</button>
     </div>
