@@ -1,67 +1,31 @@
-:root {
-  --wa-blue: #3b82f6;
-  --wa-green: #25d366;
-  --bg-dark: #0b141a;
-  --bg-white: #ffffff;
-  --text-grey: #8696a0;
+/* Previous styles included + these additions */
+.otp-tile {
+  width: 50px; height: 60px; border: 2px solid #ddd;
+  border-radius: 10px; text-align: center; font-size: 24px;
 }
 
-body, html {
-  margin: 0; padding: 0;
-  height: 100%; font-family: 'Segoe UI', sans-serif;
-  background: var(--bg-dark);
+.drawer {
+  position: absolute; bottom: 70px; left: 10px; right: 10px;
+  background: #2a3942; border-radius: 20px; padding: 20px;
+  box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
 }
 
-.screen { height: 100vh; width: 100%; display: flex; flex-direction: column; }
+.drawer-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
+}
 
-/* Auth Layouts */
-.welcome-container, .auth-container {
+.d-item {
+  color: white; border-radius: 50%; width: 60px; height: 60px;
   display: flex; flex-direction: column; align-items: center;
-  justify-content: center; height: 100%; padding: 40px; text-align: center;
+  justify-content: center; font-size: 12px; cursor: pointer;
+  margin: 0 auto;
 }
 
-.auth-container.white { background: white; color: black; }
-
-.primary-btn {
-  width: 100%; padding: 12px; border-radius: 25px;
-  border: none; color: white; font-weight: bold; cursor: pointer; margin-top: 20px;
-}
-.primary-btn.blue { background: var(--wa-blue); }
-.primary-btn.green { background: #4caf50; }
-
-/* Phone Input */
-.phone-input {
-  display: flex; background: #1f2c34; padding: 10px;
-  border-radius: 8px; width: 100%; gap: 10px;
-}
-.phone-input input { background: transparent; border: none; color: white; outline: none; }
-
-/* OTP Inputs */
-.otp-inputs { display: flex; gap: 10px; margin: 20px 0; }
-.otp-inputs input {
-  width: 40px; height: 50px; text-align: center; font-size: 20px;
-  border: 1px solid #ddd; border-radius: 8px;
-}
-
-/* Profile screen */
 .avatar-circle {
-  width: 100px; height: 100px; background: #e1e4e7;
-  border-radius: 50%; display: flex; align-items: center;
-  justify-content: center; font-size: 40px; margin-bottom: 20px;
+  width: 120px; height: 120px; background: #e1e4e7;
+  border-radius: 50%; margin: 0 auto 20px; font-size: 50px;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; border: 3px solid var(--accent);
 }
 
-.wa-input {
-  width: 100%; border: none; border-bottom: 2px solid #25d366;
-  padding: 10px; margin: 10px 0; outline: none;
-}
-
-/* Chat Layouts (Same as before but cleaned up) */
-.header { background: #202c33; padding: 10px 15px; display: flex; align-items: center; color: white; }
-.tabs { display: flex; background: #202c33; color: var(--text-grey); }
-.tab { flex: 1; text-align: center; padding: 15px; }
-.tab.active { color: #00a884; border-bottom: 3px solid #00a884; }
-
-.chat-item { display: flex; padding: 15px; gap: 15px; align-items: center; border-bottom: 1px solid #202c33; }
-.avatar { width: 50px; height: 50px; border-radius: 50%; }
-.chat-details { flex: 1; }
-.name-row { display: flex; justify-content: space-between; color: white; }
+.avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
