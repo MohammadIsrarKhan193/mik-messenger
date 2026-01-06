@@ -1,31 +1,56 @@
-/* Previous styles included + these additions */
-.otp-tile {
-  width: 50px; height: 60px; border: 2px solid #ddd;
-  border-radius: 10px; text-align: center; font-size: 24px;
+:root {
+  --wa-dark-bg: #0b141a;
+  --wa-header: #202c33;
+  --wa-accent: #00a884;
+  --wa-text: #e9edef;
+  --wa-msg-me: #005c4b;
+  --wa-msg-them: #233138;
 }
 
-.drawer {
-  position: absolute; bottom: 70px; left: 10px; right: 10px;
-  background: #2a3942; border-radius: 20px; padding: 20px;
-  box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+/* Make it feel like a real App */
+body {
+  background-color: var(--wa-dark-bg);
+  color: var(--wa-text);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  overflow: hidden; /* No scrollbars on the main screen */
 }
 
-.drawer-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
+/* Professional Chat Bubbles */
+.msg {
+  max-width: 75%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  margin-bottom: 4px;
+  font-size: 14.5px;
+  position: relative;
+  box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
 }
 
-.d-item {
-  color: white; border-radius: 50%; width: 60px; height: 60px;
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; font-size: 12px; cursor: pointer;
-  margin: 0 auto;
+.msg.you {
+  background-color: var(--wa-msg-me);
+  align-self: flex-end;
+  border-top-right-radius: 2px;
 }
 
-.avatar-circle {
-  width: 120px; height: 120px; background: #e1e4e7;
-  border-radius: 50%; margin: 0 auto 20px; font-size: 50px;
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden; border: 3px solid var(--accent);
+.msg.other {
+  background-color: var(--wa-msg-them);
+  align-self: flex-start;
+  border-top-left-radius: 2px;
 }
 
-.avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+/* Floating Action Button like your screenshot */
+.fab {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  background-color: var(--wa-accent);
+  color: #111b21;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px; /* Modern WA squircle shape */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
