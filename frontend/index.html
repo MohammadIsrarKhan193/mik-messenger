@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MÎK Messenger v1</title>
+  <title>MÎK Messenger v1 Pro</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <div id="welcomeScreen" class="screen">
-    <div class="welcome-container">
+    <div class="auth-container">
       <div class="app-icon-large">📞</div>
       <h1>MÎK Messenger</h1>
       <p>Welcome to MÎK Messenger</p>
@@ -20,89 +20,79 @@
   <div id="loginScreen" class="screen" style="display:none;">
     <div class="auth-container">
       <h2>MÎK Messenger</h2>
-      <div class="input-group">
-        <div class="phone-input">
-          <span class="flag">🇦🇫</span>
-          <span class="code">+93</span>
-          <input type="number" id="phoneNumber" placeholder="Phone number">
-        </div>
+      <div class="phone-input">
+        <span class="flag">🇦🇫</span>
+        <input type="number" id="phoneNumber" placeholder="Phone number">
       </div>
-      <button class="primary-btn blue" onclick="showScreen('otpScreen')">Get OTP</button>
-      <p class="alt-link">Log in with password</p>
+      <button class="primary-btn blue" onclick="sendOTP()">Get OTP</button>
     </div>
   </div>
 
   <div id="otpScreen" class="screen" style="display:none;">
     <div class="auth-container white">
-      <div class="logo-text-dark">💬 MÎK Messenger</div>
       <h3>OTP Verification</h3>
-      <p>Enter the 6-digit code sent to your number</p>
+      <p id="otpNote">Enter the code sent to your number</p>
       <div class="otp-inputs">
-        <input type="text" maxlength="1">
-        <input type="text" maxlength="1">
-        <input type="text" maxlength="1">
-        <input type="text" maxlength="1">
-        <input type="text" maxlength="1">
-        <input type="text" maxlength="1">
+        <input type="text" class="otp-tile" maxlength="1">
+        <input type="text" class="otp-tile" maxlength="1">
+        <input type="text" class="otp-tile" maxlength="1">
+        <input type="text" class="otp-tile" maxlength="1">
       </div>
-      <p class="resend-text">Resend OTP</p>
-      <p class="alt-link" onclick="showScreen('profileScreen')">Change number</p>
-      <button class="primary-btn blue" onclick="showScreen('profileScreen')">Verify</button>
+      <button class="primary-btn blue" onclick="verifyOTP()">Verify</button>
     </div>
   </div>
 
   <div id="profileScreen" class="screen" style="display:none;">
     <div class="auth-container white">
-      <div class="profile-header">
-        <div class="wa-icon">📞</div>
-        <h3>Profile Info</h3>
+      <h3>Profile Info</h3>
+      <div class="avatar-upload" onclick="document.getElementById('dpInput').click()">
+        <div class="avatar-circle" id="dpPreview">👤</div>
+        <input type="file" id="dpInput" style="display:none" accept="image/*">
       </div>
-      <div class="avatar-upload">
-        <div class="avatar-circle">👤</div>
-      </div>
-      <input type="text" id="fullName" class="wa-input" placeholder="Name">
-      <input type="text" id="userHandle" class="wa-input" placeholder="Username">
-      <p class="hint">This will be your Username</p>
-      <button class="primary-btn green" onclick="finishSetup()">Continue</button>
+      <input type="text" id="fullName" class="wa-input" placeholder="Your Name">
+      <button class="primary-btn green" onclick="finishSetup()">Finish</button>
     </div>
   </div>
 
   <div id="mainInterface" class="screen" style="display:none;">
     <div class="header">
-      <div class="logo-small">MÎK Messenger</div>
+      <span>MÎK Messenger</span>
       <div class="top-icons">🔍 ⋮</div>
     </div>
     <div class="tabs">
-      <div class="tab active">Chats</div>
-      <div class="tab">Updates</div>
-      <div class="tab">Calls</div>
+      <div class="tab active" onclick="showTab('chats')">Chats</div>
+      <div class="tab" onclick="showTab('updates')">Updates</div>
+      <div class="tab" onclick="showTab('calls')">Calls</div>
     </div>
     <div id="chatList" class="chat-list">
-        <div class="chat-item" onclick="openChat()">
-            <img src="https://i.imgur.com/1X6R9xF.png" class="avatar">
-            <div class="chat-details">
-                <div class="name-row"><strong>MÎK Global Group</strong> <span>12:24</span></div>
-                <p>Welcome to MÎK!</p>
-            </div>
-        </div>
-    </div>
-    <button class="fab">💬</button>
+      </div>
+    <button class="fab" onclick="createNewChat()">💬</button>
   </div>
 
   <div id="conversationScreen" class="screen" style="display:none;">
     <div class="header">
-      <button class="back-btn" onclick="showScreen('mainInterface')">←</button>
-      <img src="https://i.imgur.com/1X6R9xF.png" class="avatar-small">
+      <button onclick="showScreen('mainInterface')">←</button>
+      <img src="" id="chatAvatar" class="avatar-small">
       <div class="chat-info">
-        <div class="chat-title">MÎK Global Group</div>
-        <div class="chat-status">Online</div>
+        <div id="chatTitle">User</div>
+        <div class="chat-status" id="chatStatus">online</div>
       </div>
     </div>
     <div class="chat-area" id="messages"></div>
+    
+    <div id="attachDrawer" class="drawer" style="display:none;">
+      <div class="drawer-grid">
+        <div class="d-item" style="background:#7f66ff">📄<br>Doc</div>
+        <div class="d-item" style="background:#ff4595" onclick="document.getElementById('imgInput').click()">🖼️<br>Gallery</div>
+        <div class="d-item" style="background:#02a698">📍<br>Loc</div>
+      </div>
+      <input type="file" id="imgInput" style="display:none" accept="image/*">
+    </div>
+
     <div class="input-bar">
-      <button class="icon-btn">📎</button>
+      <button onclick="toggleDrawer()">📎</button>
       <input type="text" id="msgInput" placeholder="Type a message...">
-      <button class="send-btn" id="sendBtn">➤</button>
+      <button id="sendBtn">➤</button>
     </div>
   </div>
 
