@@ -1,93 +1,67 @@
 const WebSocket = require("ws");
 const Message = require("./models/Message");
 
-const rooms = {};
-const users = new Map();
+// Track connected users: { "username": ws_socket }
+const connectedUsers = {};
 
 function setupWSServer(server) {
   const wss = new WebSocket.Server({ server });
 
   wss.on("connection", (ws) => {
-    console.log("🔌 Client connected");
+    let currentUser = "";
 
     ws.on("message", async (data) => {
       let msg;
-      try {
-        msg = JSON.parse(data.toString());
-      } catch {
-        return;
-      }
+      try { msg = JSON.parse(data.toString()); } catch { return; }
 
-      // JOIN ROOM
       if (msg.type === "join") {
-        ws.room = msg.room || "global";
-        users.set(ws, msg.user);
-
-        if (!rooms[ws.room]) rooms[ws.room] = new Set();
-        rooms[ws.room].add(ws);
-
-        // Send chat history
-        const history = await Message.find({ room: ws.room })
-          .sort({ createdAt: 1 })
-          .limit(50);
-
-        ws.send(
-          JSON.stringify({
-            type: "history",
-            messages: history.map((m) => ({
-              user: m.user,
-              text: m.text,
-            })),
-          })
-        );
-
-        broadcast(ws.room, {
-          type: "system",
-          message: `${msg.user} joined ${ws.room}`,
-        });
+        currentUser = msg.user;
+        connectedUsers[currentUser] = ws; // Map username to socket
+        console.log(`${currentUser} is online`);
+        
+        // Broadcast that user is online
+        broadcast({ type: "system", message: `${currentUser} joined MÎK` });
       }
 
-      // NEW MESSAGE
-      if (msg.type === "msg") {
-        const saved = await Message.create({
-          room: ws.room,
-          user: users.get(ws),
-          text: msg.message,
+      if (msg.type === "private_msg") {
+        const messageData = {
+          from: currentUser,
+          to: msg.to,
+          text: msg.text,
+          timestamp: Date.now()
+        };
+
+        // Save to MongoDB
+        await Message.create({
+          room: [currentUser, msg.to].sort().join("-"), // Unique room for 2 people
+          user: currentUser,
+          text: msg.text
         });
 
-        broadcast(ws.room, {
-          type: "msg",
-          user: saved.user,
-          message: saved.text,
-        });
+        // Send to recipient if online
+        if (connectedUsers[msg.to]) {
+          connectedUsers[msg.to].send(JSON.stringify({
+            type: "msg",
+            ...messageData
+          }));
+        }
+        
+        // Send back to sender for confirmation
+        ws.send(JSON.stringify({ type: "msg", ...messageData }));
       }
     });
 
     ws.on("close", () => {
-      const user = users.get(ws);
-      const room = ws.room;
-
-      if (room && rooms[room]) rooms[room].delete(ws);
-      users.delete(ws);
-
-      if (user) {
-        broadcast(room, {
-          type: "system",
-          message: `${user} left the chat`,
-        });
-      }
+      if (currentUser) delete connectedUsers[currentUser];
+      broadcast({ type: "system", message: `${currentUser} went offline` });
     });
   });
 }
 
-function broadcast(room, message) {
-  if (!rooms[room]) return;
+function broadcast(message) {
   const data = JSON.stringify(message);
-
-  rooms[room].forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(data);
-    }
+  Object.values(connectedUsers).forEach(client => {
+    if (client.readyState === WebSocket.OPEN) client.send(data);
   });
 }
 
