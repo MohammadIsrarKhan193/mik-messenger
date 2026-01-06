@@ -3,96 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MÎK Messenger v1 Pro</title>
+  <title>MÎK Messenger Pro</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 </head>
 <body>
 
-  <div id="welcomeScreen" class="screen">
-    <div class="auth-container">
-      <div class="app-icon-large">📞</div>
-      <h1>MÎK Messenger</h1>
-      <p>Welcome to MÎK Messenger</p>
-      <button class="primary-btn blue" onclick="showScreen('loginScreen')">Continue</button>
+  <div id="authContainer">
+    <div id="loginScreen" class="screen auth">
+      <h1 class="logo">MÎK</h1>
+      <div id="recaptcha-container"></div> <div class="phone-input-container">
+        <input type="text" id="phoneNumber" placeholder="+92 300 1234567">
+      </div>
+      <button class="primary-btn" onclick="onSignInSubmit()">Get Verification Code</button>
+    </div>
+
+    <div id="otpScreen" class="screen auth" style="display:none;">
+      <h3>Enter OTP</h3>
+      <input type="number" id="verificationCode" placeholder="6-digit code">
+      <button class="primary-btn" onclick="verifyCode()">Verify & Continue</button>
     </div>
   </div>
 
-  <div id="loginScreen" class="screen" style="display:none;">
-    <div class="auth-container">
-      <h2>MÎK Messenger</h2>
-      <div class="phone-input">
-        <span class="flag">🇦🇫</span>
-        <input type="number" id="phoneNumber" placeholder="Phone number">
+  <div id="appInterface" style="display:none;">
+    <div id="chatListScreen" class="screen">
+      <div class="header">
+        <span>MÎK Messenger</span>
+        <div class="icons">🔍 ⋮</div>
       </div>
-      <button class="primary-btn blue" onclick="sendOTP()">Get OTP</button>
-    </div>
-  </div>
-
-  <div id="otpScreen" class="screen" style="display:none;">
-    <div class="auth-container white">
-      <h3>OTP Verification</h3>
-      <p id="otpNote">Enter the code sent to your number</p>
-      <div class="otp-inputs">
-        <input type="text" class="otp-tile" maxlength="1">
-        <input type="text" class="otp-tile" maxlength="1">
-        <input type="text" class="otp-tile" maxlength="1">
-        <input type="text" class="otp-tile" maxlength="1">
+      <div class="tabs">
+        <div class="tab active">CHATS</div>
+        <div class="tab">STATUS</div>
+        <div class="tab">CALLS</div>
       </div>
-      <button class="primary-btn blue" onclick="verifyOTP()">Verify</button>
-    </div>
-  </div>
-
-  <div id="profileScreen" class="screen" style="display:none;">
-    <div class="auth-container white">
-      <h3>Profile Info</h3>
-      <div class="avatar-upload" onclick="document.getElementById('dpInput').click()">
-        <div class="avatar-circle" id="dpPreview">👤</div>
-        <input type="file" id="dpInput" style="display:none" accept="image/*">
-      </div>
-      <input type="text" id="fullName" class="wa-input" placeholder="Your Name">
-      <button class="primary-btn green" onclick="finishSetup()">Finish</button>
-    </div>
-  </div>
-
-  <div id="mainInterface" class="screen" style="display:none;">
-    <div class="header">
-      <span>MÎK Messenger</span>
-      <div class="top-icons">🔍 ⋮</div>
-    </div>
-    <div class="tabs">
-      <div class="tab active" onclick="showTab('chats')">Chats</div>
-      <div class="tab" onclick="showTab('updates')">Updates</div>
-      <div class="tab" onclick="showTab('calls')">Calls</div>
-    </div>
-    <div id="chatList" class="chat-list">
-      </div>
-    <button class="fab" onclick="createNewChat()">💬</button>
-  </div>
-
-  <div id="conversationScreen" class="screen" style="display:none;">
-    <div class="header">
-      <button onclick="showScreen('mainInterface')">←</button>
-      <img src="" id="chatAvatar" class="avatar-small">
-      <div class="chat-info">
-        <div id="chatTitle">User</div>
-        <div class="chat-status" id="chatStatus">online</div>
-      </div>
-    </div>
-    <div class="chat-area" id="messages"></div>
-    
-    <div id="attachDrawer" class="drawer" style="display:none;">
-      <div class="drawer-grid">
-        <div class="d-item" style="background:#7f66ff">📄<br>Doc</div>
-        <div class="d-item" style="background:#ff4595" onclick="document.getElementById('imgInput').click()">🖼️<br>Gallery</div>
-        <div class="d-item" style="background:#02a698">📍<br>Loc</div>
-      </div>
-      <input type="file" id="imgInput" style="display:none" accept="image/*">
+      <div id="chatsContainer">
+        </div>
+      <button class="fab" onclick="showSearch()">+</button>
     </div>
 
-    <div class="input-bar">
-      <button onclick="toggleDrawer()">📎</button>
-      <input type="text" id="msgInput" placeholder="Type a message...">
-      <button id="sendBtn">➤</button>
+    <div id="chatScreen" class="screen" style="display:none;">
+      <div class="header">
+        <button onclick="closeChat()">←</button>
+        <img id="activeAvatar" src="https://i.imgur.com/1X6R9xF.png" class="avatar-small">
+        <span id="activeName">User Name</span>
+      </div>
+      <div id="messageArea" class="chat-area"></div>
+      <div class="input-bar">
+        <button class="attach-btn">📎</button>
+        <input type="text" id="msgInput" placeholder="Message">
+        <button id="sendBtn" onclick="sendPrivateMsg()">➤</button>
+      </div>
     </div>
   </div>
 
