@@ -1,85 +1,92 @@
-// REPLACE THIS WITH YOUR FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "YOUR_DATABASE_URL", // Found in Realtime Database tab
   projectId: "YOUR_PROJECT_ID",
   storageBucket: "YOUR_PROJECT.appspot.com",
   messagingSenderId: "YOUR_SENDER_ID",
   appId: "YOUR_APP_ID"
 };
 
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const socket = new WebSocket("wss://mik-messenger-1.onrender.com");
+const db = firebase.database();
 
-let confirmationResult;
-let currentUser = null;
-let activeRecipient = null;
+let confirmResult;
+let myPhone = "";
+let activeChatId = null;
 
-// 1. PHONE AUTH LOGIC
-window.onSignInSubmit = function() {
-  const number = document.getElementById('phoneNumber').value;
-  const recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container');
+// --- AUTH LOGIC ---
+function sendOTP() {
+  const phone = document.getElementById('phoneNumber').value;
+  const verifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { size: 'invisible' });
   
-  auth.signInWithPhoneNumber(number, recaptchaVerifier)
-    .then((result) => {
-      confirmationResult = result;
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('otpScreen').style.display = 'block';
-    }).catch(err => alert(err.message));
+  auth.signInWithPhoneNumber(phone, verifier).then(result => {
+    confirmResult = result;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('otpScreen').style.display = 'block';
+  }).catch(err => alert(err.message));
 }
 
-window.verifyCode = function() {
-  const code = document.getElementById('verificationCode').value;
-  confirmationResult.confirm(code).then((result) => {
-    currentUser = result.user;
+function verifyOTP() {
+  const code = document.getElementById('otpCode').value;
+  confirmResult.confirm(code).then(result => {
+    myPhone = result.user.phoneNumber;
+    // Save user to DB
+    db.ref('users/' + myPhone.replace('+', '')).set({ phone: myPhone, lastSeen: Date.now() });
     startApp();
-  }).catch(err => alert("Wrong Code!"));
+  }).catch(err => alert("Invalid Code"));
 }
 
-// 2. CHAT LOGIC
+// --- CHAT LOGIC ---
 function startApp() {
-  document.getElementById('authContainer').style.display = 'none';
-  document.getElementById('appInterface').style.display = 'block';
-  
-  socket.send(JSON.stringify({
-    type: "join",
-    userId: currentUser.phoneNumber
-  }));
+  document.getElementById('authFlow').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  loadMyChats();
+}
+
+function showSearchPrompt() {
+  const target = prompt("Enter phone number to chat (with +code):");
+  if(target) openChat(target);
 }
 
 function openChat(targetPhone) {
-  activeRecipient = targetPhone;
-  document.getElementById('chatListScreen').style.display = 'none';
+  activeChatId = [myPhone.replace('+',''), targetPhone.replace('+','')].sort().join("_");
+  document.getElementById('listScreen').style.display = 'none';
   document.getElementById('chatScreen').style.display = 'flex';
-  document.getElementById('activeName').innerText = targetPhone;
+  document.getElementById('activeChatName').innerText = targetPhone;
+  
+  // Listen for real-time messages
+  db.ref('messages/' + activeChatId).on('value', snapshot => {
+    const data = snapshot.val();
+    const area = document.getElementById('messageArea');
+    area.innerHTML = "";
+    if(data) {
+      Object.values(data).forEach(msg => {
+        const div = document.createElement('div');
+        div.className = `msg ${msg.sender === myPhone ? 'you' : 'other'}`;
+        div.innerHTML = `<div>${msg.text}</div>`;
+        area.appendChild(div);
+      });
+      area.scrollTop = area.scrollHeight;
+    }
+  });
 }
 
-function sendPrivateMsg() {
+function sendMessage() {
   const text = document.getElementById('msgInput').value;
   if(!text) return;
 
-  socket.send(JSON.stringify({
-    type: "private_msg",
-    to: activeRecipient,
-    from: currentUser.phoneNumber,
-    message: text
-  }));
-  
-  appendMessage(text, "you");
+  db.ref('messages/' + activeChatId).push({
+    sender: myPhone,
+    text: text,
+    time: Date.now()
+  });
   document.getElementById('msgInput').value = "";
 }
 
-socket.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  if(data.type === "private_msg" && data.from === activeRecipient) {
-    appendMessage(data.message, "other");
-  }
-};
-
-function appendMessage(text, side) {
-  const div = document.createElement('div');
-  div.className = `msg ${side}`;
-  div.innerHTML = `<div>${text}</div>`;
-  document.getElementById('messageArea').appendChild(div);
+function backToList() {
+  document.getElementById('chatScreen').style.display = 'none';
+  document.getElementById('listScreen').style.display = 'block';
 }
