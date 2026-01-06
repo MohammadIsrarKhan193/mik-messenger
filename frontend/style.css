@@ -1,89 +1,26 @@
 :root {
   --bg-dark: #0b141a;
   --header-bg: #202c33;
+  --accent: #00a884;
   --my-msg: #005c4b;
   --other-msg: #202c33;
-  --text-main: #e9edef;
-  --accent: #00a884;
+  --text: #e9edef;
 }
 
-body, html {
-  height: 100%; margin: 0;
-  background-color: var(--bg-dark);
-  color: var(--text-main);
-  font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
-}
+body { background: var(--bg-dark); color: var(--text); font-family: Segoe UI, sans-serif; margin: 0; }
 
-#chatBox { display: flex; flex-direction: column; height: 100vh; }
+.header { background: var(--header-bg); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+.tabs { display: flex; background: var(--header-bg); border-bottom: 1px solid #2f3b44; }
+.tab { flex: 1; text-align: center; padding: 12px; color: #8696a0; font-weight: bold; border-bottom: 3px solid transparent; }
+.tab.active { color: var(--accent); border-bottom: 3px solid var(--accent); }
 
-.header {
-  background: var(--header-bg);
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  z-index: 10;
-}
+.chat-list { height: calc(100vh - 110px); overflow-y: auto; }
+.chat-item { display: flex; padding: 15px; border-bottom: 1px solid #202c33; align-items: center; cursor: pointer; }
+.chat-item img { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; }
 
-.profile img { width: 40px; height: 40px; border-radius: 50%; margin-right: 15px; }
+.fab { position: fixed; right: 20px; bottom: 30px; background: var(--accent); border: none; width: 55px; height: 55px; border-radius: 15px; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
 
-.chat-area {
-  flex: 1;
-  overflow-y: auto;
-  background-color: #0b141a;
-  background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-  background-repeat: repeat;
-  background-size: 400px;
-  padding: 20px;
-}
-
-.messages { display: flex; flex-direction: column; gap: 8px; }
-
-.msg {
-  max-width: 85%;
-  padding: 8px 12px;
-  border-radius: 8px;
-  position: relative;
-  font-size: 15px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-}
-
-.msg.you {
-  align-self: flex-end;
-  background: var(--my-msg);
-  border-top-right-radius: 0;
-}
-
-.msg.other {
-  align-self: flex-start;
-  background: var(--other-msg);
-  border-top-left-radius: 0;
-}
-
-.input-bar {
-  background: var(--header-bg);
-  padding: 10px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.input-bar input {
-  flex: 1;
-  background: #2a3942;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 25px;
-  color: white;
-  outline: none;
-}
-
-.input-bar button {
-  background: var(--accent);
-  color: white;
-  border: none;
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  font-size: 20px;
-  cursor: pointer;
-}
+/* Chat Bubbles like WhatsApp */
+.msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; margin: 4px 0; font-size: 15px; line-height: 1.4; position: relative; }
+.msg.you { align-self: flex-end; background: var(--my-msg); border-top-right-radius: 0; }
+.msg.other { align-self: flex-start; background: var(--other-msg); border-top-left-radius: 0; }
