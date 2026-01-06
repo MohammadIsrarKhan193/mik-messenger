@@ -1,84 +1,85 @@
+// REPLACE THIS WITH YOUR FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 const socket = new WebSocket("wss://mik-messenger-1.onrender.com");
-let myData = { name: "", phone: "", dp: "" };
-let activeChat = null;
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
-  document.getElementById(id).style.display = 'flex';
+let confirmationResult;
+let currentUser = null;
+let activeRecipient = null;
+
+// 1. PHONE AUTH LOGIC
+window.onSignInSubmit = function() {
+  const number = document.getElementById('phoneNumber').value;
+  const recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container');
+  
+  auth.signInWithPhoneNumber(number, recaptchaVerifier)
+    .then((result) => {
+      confirmationResult = result;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('otpScreen').style.display = 'block';
+    }).catch(err => alert(err.message));
 }
 
-// SIMULATED OTP LOGIC
-function sendOTP() {
-  const phone = document.getElementById('phoneNumber').value;
-  if(!phone) return alert("Enter Phone");
-  myData.phone = phone;
-  alert("Simulated OTP: 1234"); // You will replace this with real API call
-  showScreen('otpScreen');
+window.verifyCode = function() {
+  const code = document.getElementById('verificationCode').value;
+  confirmationResult.confirm(code).then((result) => {
+    currentUser = result.user;
+    startApp();
+  }).catch(err => alert("Wrong Code!"));
 }
 
-function verifyOTP() {
-  // Simple check for POC
-  showScreen('profileScreen');
-}
-
-// DP PREVIEW
-document.getElementById('dpInput').onchange = (e) => {
-  const reader = new FileReader();
-  reader.onload = () => {
-    myData.dp = reader.result;
-    document.getElementById('dpPreview').innerHTML = `<img src="${reader.result}">`;
-  };
-  reader.readAsDataURL(e.target.files[0]);
-};
-
-function finishSetup() {
-  myData.name = document.getElementById('fullName').value;
-  socket.send(JSON.stringify({ type: 'join', user: myData.name, dp: myData.dp }));
-  showScreen('mainInterface');
-  renderChatList();
-}
-
-function renderChatList() {
-  const list = document.getElementById('chatList');
-  // Example Global Group + empty state for 1-on-1
-  list.innerHTML = `
-    <div class="chat-item" onclick="openPrivateChat('MÎK Global','https://i.imgur.com/1X6R9xF.png')">
-      <img src="https://i.imgur.com/1X6R9xF.png">
-      <div class="chat-details"><strong>MÎK Global Group</strong><p>Tap to chat</p></div>
-    </div>
-  `;
-}
-
-function openPrivateChat(name, avatar) {
-  activeChat = name;
-  document.getElementById('chatTitle').innerText = name;
-  document.getElementById('chatAvatar').src = avatar;
-  showScreen('conversationScreen');
-}
-
-function toggleDrawer() {
-  const d = document.getElementById('attachDrawer');
-  d.style.display = d.style.display === 'none' ? 'block' : 'none';
-}
-
-document.getElementById('sendBtn').onclick = () => {
-  const txt = document.getElementById('msgInput').value;
-  if(!txt) return;
+// 2. CHAT LOGIC
+function startApp() {
+  document.getElementById('authContainer').style.display = 'none';
+  document.getElementById('appInterface').style.display = 'block';
+  
   socket.send(JSON.stringify({
-    type: "msg",
-    to: activeChat,
-    message: txt,
-    from: myData.name
+    type: "join",
+    userId: currentUser.phoneNumber
   }));
-  document.getElementById('msgInput').value = "";
-};
+}
 
-socket.onmessage = (e) => {
-  const data = JSON.parse(e.data);
-  if(data.type === "msg") {
-    const div = document.createElement('div');
-    div.className = `msg ${data.from === myData.name ? 'you' : 'other'}`;
-    div.innerHTML = `<div>${data.message}</div>`;
-    document.getElementById('messages').appendChild(div);
+function openChat(targetPhone) {
+  activeRecipient = targetPhone;
+  document.getElementById('chatListScreen').style.display = 'none';
+  document.getElementById('chatScreen').style.display = 'flex';
+  document.getElementById('activeName').innerText = targetPhone;
+}
+
+function sendPrivateMsg() {
+  const text = document.getElementById('msgInput').value;
+  if(!text) return;
+
+  socket.send(JSON.stringify({
+    type: "private_msg",
+    to: activeRecipient,
+    from: currentUser.phoneNumber,
+    message: text
+  }));
+  
+  appendMessage(text, "you");
+  document.getElementById('msgInput').value = "";
+}
+
+socket.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  if(data.type === "private_msg" && data.from === activeRecipient) {
+    appendMessage(data.message, "other");
   }
 };
+
+function appendMessage(text, side) {
+  const div = document.createElement('div');
+  div.className = `msg ${side}`;
+  div.innerHTML = `<div>${text}</div>`;
+  document.getElementById('messageArea').appendChild(div);
+}
