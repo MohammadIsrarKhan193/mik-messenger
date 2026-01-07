@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <div id="splashScreen" class="screen full-center">
         <div class="logo-animation">MÎK</div>
         <p>Your World, Your Message</p>
@@ -14,10 +15,12 @@
 
     <div id="authScreen" class="screen full-center" style="display:none;">
         <div class="auth-box">
-            <h2>Welcome to MÎK</h2>
+            <h1 class="logo-small">MÎK</h1>
+            <h2>Enter Phone Number</h2>
             <div id="recaptcha-container"></div>
             <input type="tel" id="phoneNumber" placeholder="+93 78 966 2146">
             <button id="sendOtpBtn">Get SMS Code</button>
+            
             <div id="otpInputArea" style="display:none;">
                 <input type="number" id="otpCode" placeholder="Enter 6-digit OTP">
                 <button id="verifyOtpBtn">Verify & Enter</button>
@@ -28,13 +31,13 @@
     <div id="profileSetupScreen" class="screen full-center" style="display:none;">
         <div class="auth-box">
             <h3>Complete Your Profile</h3>
-            <div class="avatar-upload" onclick="document.getElementById('profilePicInput').click()">
-                <img id="setupPreview" src="https://via.placeholder.com/100" class="avatar-large">
-                <p>Tap to change DP</p>
+            <div class="profile-pic-container" onclick="document.getElementById('profilePicInput').click()">
+                <img id="setupPreview" src="https://via.placeholder.com/120" class="avatar-setup">
+                <div class="camera-icon">📷</div>
             </div>
             <input type="file" id="profilePicInput" style="display:none" accept="image/*">
-            <input type="text" id="userNameInput" placeholder="Enter Your Name">
-            <button id="saveProfileBtn">Start Chatting</button>
+            <input type="text" id="userNameInput" placeholder="What's your name?">
+            <button id="saveProfileBtn">Finish & Start MÎK</button>
         </div>
     </div>
 
@@ -46,12 +49,17 @@
             </div>
             <div class="header-icons">🔍 ⋮</div>
         </div>
+        
         <div class="tabs">
             <div class="tab active">CHATS</div>
             <div class="tab">STATUS</div>
             <div class="tab">CALLS</div>
         </div>
-        <div id="chatList" class="chat-list"></div>
+
+        <div id="chatList" class="chat-list">
+            <div class="empty-state">No chats yet. Press + to start!</div>
+        </div>
+
         <button class="fab" id="newChatBtn">+</button>
     </div>
 
@@ -60,7 +68,8 @@
       "imports": {
         "firebase/app": "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js",
         "firebase/auth": "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js",
-        "firebase/database": "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js"
+        "firebase/database": "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js",
+        "firebase/storage": "https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js"
       }
     }
     </script>
