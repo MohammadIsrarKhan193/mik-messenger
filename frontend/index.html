@@ -18,11 +18,23 @@
             <div id="recaptcha-container"></div>
             <input type="tel" id="phoneNumber" placeholder="+93 78 966 2146">
             <button id="sendOtpBtn">Get SMS Code</button>
-            
             <div id="otpInputArea" style="display:none;">
                 <input type="number" id="otpCode" placeholder="Enter 6-digit OTP">
                 <button id="verifyOtpBtn">Verify & Enter</button>
             </div>
+        </div>
+    </div>
+
+    <div id="profileSetupScreen" class="screen full-center" style="display:none;">
+        <div class="auth-box">
+            <h3>Complete Your Profile</h3>
+            <div class="avatar-upload" onclick="document.getElementById('profilePicInput').click()">
+                <img id="setupPreview" src="https://via.placeholder.com/100" class="avatar-large">
+                <p>Tap to change DP</p>
+            </div>
+            <input type="file" id="profilePicInput" style="display:none" accept="image/*">
+            <input type="text" id="userNameInput" placeholder="Enter Your Name">
+            <button id="saveProfileBtn">Start Chatting</button>
         </div>
     </div>
 
@@ -34,16 +46,12 @@
             </div>
             <div class="header-icons">🔍 ⋮</div>
         </div>
-        
         <div class="tabs">
             <div class="tab active">CHATS</div>
             <div class="tab">STATUS</div>
             <div class="tab">CALLS</div>
         </div>
-
-        <div id="chatList" class="chat-list">
-            </div>
-
+        <div id="chatList" class="chat-list"></div>
         <button class="fab" id="newChatBtn">+</button>
     </div>
 
