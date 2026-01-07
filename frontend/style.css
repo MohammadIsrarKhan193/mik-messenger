@@ -1,44 +1,16 @@
-:root {
-    --primary: #00a884;
-    --dark-bg: #111b21;
-    --dark-header: #202c33;
-    --text-white: #e9edef;
-}
-
-body {
-    margin: 0; background-color: var(--dark-bg);
-    color: var(--text-white); font-family: 'Segoe UI', sans-serif;
-}
-
-.screen { height: 100vh; width: 100%; display: flex; flex-direction: column; }
+:root { --primary: #00a884; --dark-bg: #111b21; --dark-header: #202c33; --text: #e9edef; }
+body { margin: 0; background: var(--dark-bg); color: var(--text); font-family: sans-serif; }
+.screen { height: 100vh; display: flex; flex-direction: column; }
 .full-center { align-items: center; justify-content: center; text-align: center; }
-
-/* Splash Screen */
-.logo-animation {
-    font-size: 80px; font-weight: bold; color: var(--primary);
-    text-shadow: 0 0 20px rgba(0, 168, 132, 0.5);
-}
-
-/* Auth Box */
-.auth-box { background: var(--dark-header); padding: 40px; border-radius: 20px; width: 80%; max-width: 400px; }
-input { 
-    width: 100%; padding: 12px; margin: 10px 0; background: #2a3942; 
-    border: none; color: white; border-radius: 8px; box-sizing: border-box;
-}
-button { 
-    width: 100%; padding: 12px; background: var(--primary); 
-    border: none; color: #111b21; font-weight: bold; border-radius: 8px; cursor: pointer;
-}
-
-/* App Header */
+.logo-animation { font-size: 80px; font-weight: bold; color: var(--primary); animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } }
+.auth-box { background: var(--dark-header); padding: 40px; border-radius: 20px; width: 85%; max-width: 400px; }
+input { width: 100%; padding: 12px; margin: 10px 0; background: #2a3942; border: none; color: white; border-radius: 8px; box-sizing: border-box; }
+button { width: 100%; padding: 12px; background: var(--primary); border: none; font-weight: bold; border-radius: 8px; cursor: pointer; }
 .app-header { background: var(--dark-header); padding: 15px; display: flex; justify-content: space-between; align-items: center; }
 .avatar { width: 40px; height: 40px; border-radius: 50%; }
-.tabs { display: flex; background: var(--dark-header); border-bottom: 1px solid #2a3942; }
-.tab { flex: 1; text-align: center; padding: 15px; color: #8696a0; font-weight: bold; }
+.avatar-large { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); margin-bottom: 15px; }
+.tabs { display: flex; background: var(--dark-header); }
+.tab { flex: 1; padding: 15px; text-align: center; color: #8696a0; }
 .tab.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
-
-.fab {
-    position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
-    background: var(--primary); color: #111b21; font-size: 30px;
-    border: none; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-}
+.fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--primary); border: none; border-radius: 16px; font-size: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
