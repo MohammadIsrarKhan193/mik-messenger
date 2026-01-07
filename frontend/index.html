@@ -7,60 +7,60 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div id="splashScreen" class="screen full-center">
         <div class="logo-animation">MÎK</div>
-        <p>Your World, Your Message</p>
+        <p class="fade-in">Your World, Your Message</p>
     </div>
 
     <div id="authScreen" class="screen full-center" style="display:none;">
-        <div class="auth-box">
-            <h1 class="logo-small">MÎK</h1>
-            <h2>Enter Phone Number</h2>
+        <div class="glass-box">
+            <h1 class="logo-text">MÎK</h1>
             <div id="recaptcha-container"></div>
             <input type="tel" id="phoneNumber" placeholder="+93 78 966 2146">
             <button id="sendOtpBtn">Get SMS Code</button>
-            
             <div id="otpInputArea" style="display:none;">
-                <input type="number" id="otpCode" placeholder="Enter 6-digit OTP">
-                <button id="verifyOtpBtn">Verify & Enter</button>
+                <input type="number" id="otpCode" placeholder="6-Digit OTP">
+                <button id="verifyOtpBtn">Verify</button>
             </div>
         </div>
     </div>
 
     <div id="profileSetupScreen" class="screen full-center" style="display:none;">
-        <div class="auth-box">
-            <h3>Complete Your Profile</h3>
-            <div class="profile-pic-container" onclick="document.getElementById('profilePicInput').click()">
-                <img id="setupPreview" src="https://via.placeholder.com/120" class="avatar-setup">
-                <div class="camera-icon">📷</div>
+        <div class="glass-box">
+            <h3>Set Your Identity</h3>
+            <div class="dp-upload" onclick="document.getElementById('profilePicInput').click()">
+                <img id="setupPreview" src="https://via.placeholder.com/120" class="dp-large">
+                <span class="cam-icon">📷</span>
             </div>
             <input type="file" id="profilePicInput" style="display:none" accept="image/*">
-            <input type="text" id="userNameInput" placeholder="What's your name?">
-            <button id="saveProfileBtn">Finish & Start MÎK</button>
+            <input type="text" id="userNameInput" placeholder="Enter Username">
+            <button id="saveProfileBtn">Finish Setup</button>
         </div>
     </div>
 
     <div id="mainApp" class="screen" style="display:none;">
-        <div class="app-header">
-            <div class="user-profile">
-                <img id="myAvatar" src="https://via.placeholder.com/40" class="avatar">
+        <div class="app-header glass">
+            <div class="user-info">
+                <img id="myAvatar" src="" class="avatar-small">
                 <span id="myName">User</span>
             </div>
-            <div class="header-icons">🔍 ⋮</div>
+            <div class="header-actions">
+                <button class="icon-btn" id="openSearchBtn">🔍</button>
+            </div>
         </div>
         
-        <div class="tabs">
-            <div class="tab active">CHATS</div>
-            <div class="tab">STATUS</div>
-            <div class="tab">CALLS</div>
+        <div id="chatList" class="chat-area">
+            <div class="empty-msg">No chats yet. Search for a friend!</div>
         </div>
 
-        <div id="chatList" class="chat-list">
-            <div class="empty-state">No chats yet. Press + to start!</div>
+        <div id="searchOverlay" class="overlay" style="display:none;">
+            <div class="glass-box">
+                <button id="closeSearch" class="close-btn">×</button>
+                <input type="tel" id="searchPhone" placeholder="Friend's Phone (+92...)">
+                <button id="searchUserBtn">Find Friend</button>
+                <div id="searchResult" class="result-box"></div>
+            </div>
         </div>
-
-        <button class="fab" id="newChatBtn">+</button>
     </div>
 
     <script type="importmap">
