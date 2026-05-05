@@ -1,78 +1,305 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MÎK Messenger</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MÎK Messenger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <!-- Google Sign-In SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-    <div id="splashScreen" class="screen full-center">
-        <div class="logo-animation">MÎK</div>
-        <p class="fade-in">Your World, Your Message</p>
+
+<!-- ═══════════════════════════
+     SPLASH SCREEN
+═══════════════════════════ -->
+<div id="splash" class="screen">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <div class="splash-content">
+    <div class="logo-ring">
+      <div class="logo-inner">
+        <span class="logo-mark">MÎK</span>
+      </div>
+    </div>
+    <div class="splash-brand">
+      <h1>MÎK Messenger</h1>
+      <p>Your World, Your Message</p>
+    </div>
+    <div class="splash-loader">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════
+     LOGIN SCREEN
+═══════════════════════════ -->
+<div id="login" class="screen hidden">
+  <div class="login-card">
+    <div class="card-top-bar"></div>
+
+    <div class="login-header">
+      <div class="mini-logo"><span>MÎK</span></div>
+      <h2>Welcome 👋</h2>
+      <p>Sign in to MÎK Messenger</p>
     </div>
 
-    <div id="authScreen" class="screen full-center" style="display:none;">
-        <div class="glass-box">
-            <h1 class="logo-text">MÎK</h1>
-            <div id="recaptcha-container"></div>
-            <input type="tel" id="phoneNumber" placeholder="+93 78 966 2146">
-            <button id="sendOtpBtn">Get SMS Code</button>
-            <div id="otpInputArea" style="display:none;">
-                <input type="number" id="otpCode" placeholder="6-Digit OTP">
-                <button id="verifyOtpBtn">Verify</button>
-            </div>
+    <!-- Phone Section -->
+    <div id="phoneSection">
+      <div class="phone-row">
+        <!-- Country Selector -->
+        <div class="country-selector" id="countrySelector" onclick="toggleCountryDropdown()">
+          <span id="selectedFlag">🌍</span>
+          <span id="selectedCode">+??</span>
+          <span class="arrow">▾</span>
         </div>
+        <input type="tel" id="phoneInput" placeholder="Phone number" inputmode="numeric" maxlength="15"/>
+      </div>
+
+      <!-- Country Dropdown -->
+      <div class="country-dropdown hidden" id="countryDropdown">
+        <div class="country-search-wrap">
+          <input type="text" id="countrySearch" placeholder="🔍 Search country..." oninput="filterCountries(this.value)"/>
+        </div>
+        <div class="country-list" id="countryList"></div>
+      </div>
+
+      <button class="btn-primary" onclick="showOTP()">Continue →</button>
+
+      <div class="divider">or sign in with</div>
+
+      <div class="social-btns">
+        <!-- Google -->
+        <button class="btn-social" id="googleBtn" onclick="signInWithGoogle()">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Google
+        </button>
+        <!-- Apple -->
+        <button class="btn-social" onclick="signInWithApple()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          Apple
+        </button>
+      </div>
+
+      <p class="terms">By continuing you agree to our <a href="#">Terms</a> & <a href="#">Privacy Policy</a></p>
     </div>
 
-    <div id="profileSetupScreen" class="screen full-center" style="display:none;">
-        <div class="glass-box">
-            <h3>Set Your Identity</h3>
-            <div class="dp-upload" onclick="document.getElementById('profilePicInput').click()">
-                <img id="setupPreview" src="https://via.placeholder.com/120" class="dp-large">
-                <span class="cam-icon">📷</span>
-            </div>
-            <input type="file" id="profilePicInput" style="display:none" accept="image/*">
-            <input type="text" id="userNameInput" placeholder="Enter Username">
-            <button id="saveProfileBtn">Finish Setup</button>
-        </div>
+    <!-- OTP Section -->
+    <div id="otpSection" class="hidden">
+      <p class="otp-subtitle">Enter the 6-digit code sent to</p>
+      <p id="otpHint" class="otp-hint"></p>
+      <div class="otp-inputs">
+        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" oninput="otpNav(this,0)"/>
+        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" oninput="otpNav(this,1)"/>
+        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" oninput="otpNav(this,2)"/>
+        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" oninput="otpNav(this,3)"/>
+        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" oninput="otpNav(this,4)"/>
+        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" oninput="otpNav(this,5)"/>
+      </div>
+      <button class="btn-primary" onclick="verifyOTP()">Verify & Enter →</button>
+      <div class="resend-row">
+        <button id="resendBtn" class="resend-btn" onclick="resendOTP()" disabled>Resend OTP</button>
+        <span id="resendTimer">Resend in 60s</span>
+      </div>
+      <button class="back-btn" onclick="backToPhone()">← Change number</button>
     </div>
 
-    <div id="mainApp" class="screen" style="display:none;">
-        <div class="app-header glass">
-            <div class="user-info">
-                <img id="myAvatar" src="" class="avatar-small">
-                <span id="myName">User</span>
-            </div>
-            <div class="header-actions">
-                <button class="icon-btn" id="openSearchBtn">🔍</button>
-            </div>
-        </div>
-        
-        <div id="chatList" class="chat-area">
-            <div class="empty-msg">No chats yet. Search for a friend!</div>
-        </div>
+  </div>
+</div>
 
-        <div id="searchOverlay" class="overlay" style="display:none;">
-            <div class="glass-box">
-                <button id="closeSearch" class="close-btn">×</button>
-                <input type="tel" id="searchPhone" placeholder="Friend's Phone (+92...)">
-                <button id="searchUserBtn">Find Friend</button>
-                <div id="searchResult" class="result-box"></div>
-            </div>
-        </div>
+<!-- ═══════════════════════════
+     MAIN APP
+═══════════════════════════ -->
+<div id="app" class="screen hidden">
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-brand">MÎK</span>
+      <div class="header-actions">
+        <button class="icon-btn" title="New Chat">✏️</button>
+        <button class="icon-btn" title="Settings">⚙️</button>
+      </div>
     </div>
 
-    <script type="importmap">
-    {
-      "imports": {
-        "firebase/app": "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js",
-        "firebase/auth": "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js",
-        "firebase/database": "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js",
-        "firebase/storage": "https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js"
-      }
-    }
-    </script>
-    <script type="module" src="app.js"></script>
+    <!-- Stories -->
+    <div class="story-row">
+      <div class="story-item">
+        <div class="story-ring add-ring"><div class="story-inner">➕</div></div>
+        <span class="story-name">Add</span>
+      </div>
+      <div class="story-item">
+        <div class="story-ring"><div class="story-inner s1">🦊</div></div>
+        <span class="story-name">You</span>
+      </div>
+      <div class="story-item">
+        <div class="story-ring"><div class="story-inner s2">🐼</div></div>
+        <span class="story-name">Ali</span>
+      </div>
+      <div class="story-item">
+        <div class="story-ring seen"><div class="story-inner s3">🦋</div></div>
+        <span class="story-name">Sara</span>
+      </div>
+      <div class="story-item">
+        <div class="story-ring"><div class="story-inner s4">🐯</div></div>
+        <span class="story-name">Zaid</span>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search conversations..."/>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(this)">All</button>
+      <button class="tab" onclick="switchTab(this)">Unread</button>
+      <button class="tab" onclick="switchTab(this)">Groups</button>
+    </div>
+
+    <!-- Chat List -->
+    <div class="chat-list">
+      <div class="chat-item active" onclick="openChat(this,'Ali Hassan','🐼','#1a2520','online')">
+        <div class="avatar online" style="background:#1a2520">🐼</div>
+        <div class="chat-info">
+          <div class="chat-name">Ali Hassan</div>
+          <div class="chat-preview">Bhai chill hai tu? 😄</div>
+        </div>
+        <div class="chat-meta">
+          <span class="chat-time">2m</span>
+          <span class="badge">3</span>
+        </div>
+      </div>
+      <div class="chat-item" onclick="openChat(this,'MÎK Dev Squad','👨‍💻','#10183a','group')">
+        <div class="avatar" style="background:#10183a">👨‍💻</div>
+        <div class="chat-info">
+          <div class="chat-name">MÎK Dev Squad 🔥</div>
+          <div class="chat-preview">Israr: new UI looks fire!</div>
+        </div>
+        <div class="chat-meta">
+          <span class="chat-time">15m</span>
+          <span class="badge">12</span>
+        </div>
+      </div>
+      <div class="chat-item" onclick="openChat(this,'Sara Khan','🦋','#201520','online')">
+        <div class="avatar online" style="background:#201520">🦋</div>
+        <div class="chat-info">
+          <div class="chat-name">Sara Khan</div>
+          <div class="chat-preview">JazakAllah 🤍</div>
+        </div>
+        <div class="chat-meta"><span class="chat-time">1h</span></div>
+      </div>
+      <div class="chat-item" onclick="openChat(this,'Zaid Mirza','🐯','#201a10','online')">
+        <div class="avatar online" style="background:#201a10">🐯</div>
+        <div class="chat-info">
+          <div class="chat-name">Zaid Mirza</div>
+          <div class="chat-preview">Project kab submit hai?</div>
+        </div>
+        <div class="chat-meta">
+          <span class="chat-time">3h</span>
+          <span class="badge">1</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        <span>Chats</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+        <span>Profile</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+        <span>Alerts</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        <span>Settings</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Area -->
+  <div class="chat-area" id="chatArea">
+    <div class="chat-topbar">
+      <button class="back-to-list" onclick="backToList()">←</button>
+      <div class="avatar" id="chatAvatar" style="background:#1a2520;width:40px;height:40px;border-radius:12px;font-size:20px;">🐼</div>
+      <div class="topbar-info">
+        <div class="topbar-name" id="chatName">Ali Hassan</div>
+        <div class="topbar-status" id="chatStatus">● Online</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn">📞</button>
+        <button class="icon-btn">📹</button>
+        <button class="icon-btn">⋯</button>
+      </div>
+    </div>
+
+    <div class="messages-wrap" id="messages">
+      <div class="date-divider">Today</div>
+      <div class="msg received">
+        <div class="msg-avatar" style="background:#1a2520">🐼</div>
+        <div>
+          <div class="msg-bubble">Assalamualaikum bhai! 🌙</div>
+          <div class="msg-time">10:02 AM</div>
+        </div>
+      </div>
+      <div class="msg sent">
+        <div class="msg-avatar" style="background:#1e1040">🦊</div>
+        <div>
+          <div class="msg-bubble">Wa alaikum assalam! Kya haal hai? 😄</div>
+          <div class="msg-time">10:03 AM <span class="tick">✓✓</span></div>
+        </div>
+      </div>
+      <div class="msg received">
+        <div class="msg-avatar" style="background:#1a2520">🐼</div>
+        <div>
+          <div class="msg-bubble">MÎK Messenger bana raha hai? 🔥</div>
+          <div class="msg-time">10:05 AM</div>
+        </div>
+      </div>
+      <div class="msg sent">
+        <div class="msg-avatar" style="background:#1e1040">🦊</div>
+        <div>
+          <div class="msg-bubble">Haan bhai! Insha'Allah WhatsApp se better! 💪🚀</div>
+          <div class="msg-time">10:06 AM <span class="tick">✓✓</span></div>
+        </div>
+      </div>
+      <div class="typing-indicator">
+        <div class="msg-avatar" style="background:#1a2520;width:28px;height:28px;border-radius:8px;font-size:11px;display:flex;align-items:center;justify-content:center;">🐼</div>
+        <div class="typing-dots">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <button class="icon-btn">📎</button>
+      <div class="msg-input-wrap">
+        <textarea id="msgInput" class="msg-input" placeholder="Type a message..." rows="1"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="emoji-btn">😊</button>
+      </div>
+      <button class="send-btn" onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>
