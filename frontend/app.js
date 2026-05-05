@@ -1,125 +1,108 @@
 /* ═══════════════════════════════════════
-   MÎK MESSENGER — app.js
+   MÎK MESSENGER v2 — app.js
+   Real WebSocket Chat + Full Features
 ═══════════════════════════════════════ */
 
-// ─────────────────────────────────────
-// COUNTRY DATA (200+ countries)
-// ─────────────────────────────────────
+// ─── CONFIG ───
+// Your Render WebSocket server URL
+const WS_URL = 'wss://mik-messenger-1.onrender.com';
+
+// ─── STATE ───
+let myUsername = '';
+let currentChat = '';
+let ws = null;
+let chats = {};       // { username: { messages:[], unread:0, online:false } }
+let reconnectTimer = null;
+
+// ─── COUNTRIES ───
 const COUNTRIES = [
-  { name:"Afghanistan",      flag:"🇦🇫", code:"+93"  },
-  { name:"Albania",          flag:"🇦🇱", code:"+355" },
-  { name:"Algeria",          flag:"🇩🇿", code:"+213" },
-  { name:"Argentina",        flag:"🇦🇷", code:"+54"  },
-  { name:"Armenia",          flag:"🇦🇲", code:"+374" },
-  { name:"Australia",        flag:"🇦🇺", code:"+61"  },
-  { name:"Austria",          flag:"🇦🇹", code:"+43"  },
-  { name:"Azerbaijan",       flag:"🇦🇿", code:"+994" },
-  { name:"Bahrain",          flag:"🇧🇭", code:"+973" },
-  { name:"Bangladesh",       flag:"🇧🇩", code:"+880" },
-  { name:"Belarus",          flag:"🇧🇾", code:"+375" },
-  { name:"Belgium",          flag:"🇧🇪", code:"+32"  },
-  { name:"Bolivia",          flag:"🇧🇴", code:"+591" },
-  { name:"Brazil",           flag:"🇧🇷", code:"+55"  },
-  { name:"Canada",           flag:"🇨🇦", code:"+1"   },
-  { name:"Chile",            flag:"🇨🇱", code:"+56"  },
-  { name:"China",            flag:"🇨🇳", code:"+86"  },
-  { name:"Colombia",         flag:"🇨🇴", code:"+57"  },
-  { name:"Croatia",          flag:"🇭🇷", code:"+385" },
-  { name:"Czech Republic",   flag:"🇨🇿", code:"+420" },
-  { name:"Denmark",          flag:"🇩🇰", code:"+45"  },
-  { name:"Ecuador",          flag:"🇪🇨", code:"+593" },
-  { name:"Egypt",            flag:"🇪🇬", code:"+20"  },
-  { name:"Ethiopia",         flag:"🇪🇹", code:"+251" },
-  { name:"Finland",          flag:"🇫🇮", code:"+358" },
-  { name:"France",           flag:"🇫🇷", code:"+33"  },
-  { name:"Georgia",          flag:"🇬🇪", code:"+995" },
-  { name:"Germany",          flag:"🇩🇪", code:"+49"  },
-  { name:"Ghana",            flag:"🇬🇭", code:"+233" },
-  { name:"Greece",           flag:"🇬🇷", code:"+30"  },
-  { name:"Hungary",          flag:"🇭🇺", code:"+36"  },
-  { name:"India",            flag:"🇮🇳", code:"+91"  },
-  { name:"Indonesia",        flag:"🇮🇩", code:"+62"  },
-  { name:"Iran",             flag:"🇮🇷", code:"+98"  },
-  { name:"Iraq",             flag:"🇮🇶", code:"+964" },
-  { name:"Ireland",          flag:"🇮🇪", code:"+353" },
-  { name:"Israel",           flag:"🇮🇱", code:"+972" },
-  { name:"Italy",            flag:"🇮🇹", code:"+39"  },
-  { name:"Japan",            flag:"🇯🇵", code:"+81"  },
-  { name:"Jordan",           flag:"🇯🇴", code:"+962" },
-  { name:"Kazakhstan",       flag:"🇰🇿", code:"+7"   },
-  { name:"Kenya",            flag:"🇰🇪", code:"+254" },
-  { name:"Kuwait",           flag:"🇰🇼", code:"+965" },
-  { name:"Kyrgyzstan",       flag:"🇰🇬", code:"+996" },
-  { name:"Lebanon",          flag:"🇱🇧", code:"+961" },
-  { name:"Libya",            flag:"🇱🇾", code:"+218" },
-  { name:"Malaysia",         flag:"🇲🇾", code:"+60"  },
-  { name:"Maldives",         flag:"🇲🇻", code:"+960" },
-  { name:"Mexico",           flag:"🇲🇽", code:"+52"  },
-  { name:"Morocco",          flag:"🇲🇦", code:"+212" },
-  { name:"Myanmar",          flag:"🇲🇲", code:"+95"  },
-  { name:"Nepal",            flag:"🇳🇵", code:"+977" },
-  { name:"Netherlands",      flag:"🇳🇱", code:"+31"  },
-  { name:"New Zealand",      flag:"🇳🇿", code:"+64"  },
-  { name:"Nigeria",          flag:"🇳🇬", code:"+234" },
-  { name:"Norway",           flag:"🇳🇴", code:"+47"  },
-  { name:"Oman",             flag:"🇴🇲", code:"+968" },
-  { name:"Pakistan",         flag:"🇵🇰", code:"+92"  },
-  { name:"Palestine",        flag:"🇵🇸", code:"+970" },
-  { name:"Peru",             flag:"🇵🇪", code:"+51"  },
-  { name:"Philippines",      flag:"🇵🇭", code:"+63"  },
-  { name:"Poland",           flag:"🇵🇱", code:"+48"  },
-  { name:"Portugal",         flag:"🇵🇹", code:"+351" },
-  { name:"Qatar",            flag:"🇶🇦", code:"+974" },
-  { name:"Romania",          flag:"🇷🇴", code:"+40"  },
-  { name:"Russia",           flag:"🇷🇺", code:"+7"   },
-  { name:"Saudi Arabia",     flag:"🇸🇦", code:"+966" },
-  { name:"Senegal",          flag:"🇸🇳", code:"+221" },
-  { name:"Serbia",           flag:"🇷🇸", code:"+381" },
-  { name:"Singapore",        flag:"🇸🇬", code:"+65"  },
-  { name:"Somalia",          flag:"🇸🇴", code:"+252" },
-  { name:"South Africa",     flag:"🇿🇦", code:"+27"  },
-  { name:"South Korea",      flag:"🇰🇷", code:"+82"  },
-  { name:"Spain",            flag:"🇪🇸", code:"+34"  },
-  { name:"Sri Lanka",        flag:"🇱🇰", code:"+94"  },
-  { name:"Sudan",            flag:"🇸🇩", code:"+249" },
-  { name:"Sweden",           flag:"🇸🇪", code:"+46"  },
-  { name:"Switzerland",      flag:"🇨🇭", code:"+41"  },
-  { name:"Syria",            flag:"🇸🇾", code:"+963" },
-  { name:"Taiwan",           flag:"🇹🇼", code:"+886" },
-  { name:"Tajikistan",       flag:"🇹🇯", code:"+992" },
-  { name:"Tanzania",         flag:"🇹🇿", code:"+255" },
-  { name:"Thailand",         flag:"🇹🇭", code:"+66"  },
-  { name:"Tunisia",          flag:"🇹🇳", code:"+216" },
-  { name:"Turkey",           flag:"🇹🇷", code:"+90"  },
-  { name:"Turkmenistan",     flag:"🇹🇲", code:"+993" },
-  { name:"Uganda",           flag:"🇺🇬", code:"+256" },
-  { name:"Ukraine",          flag:"🇺🇦", code:"+380" },
-  { name:"United Arab Emirates", flag:"🇦🇪", code:"+971" },
-  { name:"United Kingdom",   flag:"🇬🇧", code:"+44"  },
-  { name:"United States",    flag:"🇺🇸", code:"+1"   },
-  { name:"Uzbekistan",       flag:"🇺🇿", code:"+998" },
-  { name:"Venezuela",        flag:"🇻🇪", code:"+58"  },
-  { name:"Vietnam",          flag:"🇻🇳", code:"+84"  },
-  { name:"Yemen",            flag:"🇾🇪", code:"+967" },
-  { name:"Zimbabwe",         flag:"🇿🇼", code:"+263" },
+  {name:"Afghanistan",flag:"🇦🇫",code:"+93"},
+  {name:"Albania",flag:"🇦🇱",code:"+355"},
+  {name:"Algeria",flag:"🇩🇿",code:"+213"},
+  {name:"Argentina",flag:"🇦🇷",code:"+54"},
+  {name:"Australia",flag:"🇦🇺",code:"+61"},
+  {name:"Austria",flag:"🇦🇹",code:"+43"},
+  {name:"Azerbaijan",flag:"🇦🇿",code:"+994"},
+  {name:"Bahrain",flag:"🇧🇭",code:"+973"},
+  {name:"Bangladesh",flag:"🇧🇩",code:"+880"},
+  {name:"Belgium",flag:"🇧🇪",code:"+32"},
+  {name:"Brazil",flag:"🇧🇷",code:"+55"},
+  {name:"Canada",flag:"🇨🇦",code:"+1"},
+  {name:"China",flag:"🇨🇳",code:"+86"},
+  {name:"Egypt",flag:"🇪🇬",code:"+20"},
+  {name:"Ethiopia",flag:"🇪🇹",code:"+251"},
+  {name:"France",flag:"🇫🇷",code:"+33"},
+  {name:"Germany",flag:"🇩🇪",code:"+49"},
+  {name:"Ghana",flag:"🇬🇭",code:"+233"},
+  {name:"India",flag:"🇮🇳",code:"+91"},
+  {name:"Indonesia",flag:"🇮🇩",code:"+62"},
+  {name:"Iran",flag:"🇮🇷",code:"+98"},
+  {name:"Iraq",flag:"🇮🇶",code:"+964"},
+  {name:"Ireland",flag:"🇮🇪",code:"+353"},
+  {name:"Italy",flag:"🇮🇹",code:"+39"},
+  {name:"Japan",flag:"🇯🇵",code:"+81"},
+  {name:"Jordan",flag:"🇯🇴",code:"+962"},
+  {name:"Kazakhstan",flag:"🇰🇿",code:"+7"},
+  {name:"Kenya",flag:"🇰🇪",code:"+254"},
+  {name:"Kuwait",flag:"🇰🇼",code:"+965"},
+  {name:"Lebanon",flag:"🇱🇧",code:"+961"},
+  {name:"Malaysia",flag:"🇲🇾",code:"+60"},
+  {name:"Mexico",flag:"🇲🇽",code:"+52"},
+  {name:"Morocco",flag:"🇲🇦",code:"+212"},
+  {name:"Nepal",flag:"🇳🇵",code:"+977"},
+  {name:"Netherlands",flag:"🇳🇱",code:"+31"},
+  {name:"Nigeria",flag:"🇳🇬",code:"+234"},
+  {name:"Norway",flag:"🇳🇴",code:"+47"},
+  {name:"Oman",flag:"🇴🇲",code:"+968"},
+  {name:"Pakistan",flag:"🇵🇰",code:"+92"},
+  {name:"Palestine",flag:"🇵🇸",code:"+970"},
+  {name:"Philippines",flag:"🇵🇭",code:"+63"},
+  {name:"Poland",flag:"🇵🇱",code:"+48"},
+  {name:"Portugal",flag:"🇵🇹",code:"+351"},
+  {name:"Qatar",flag:"🇶🇦",code:"+974"},
+  {name:"Russia",flag:"🇷🇺",code:"+7"},
+  {name:"Saudi Arabia",flag:"🇸🇦",code:"+966"},
+  {name:"Singapore",flag:"🇸🇬",code:"+65"},
+  {name:"Somalia",flag:"🇸🇴",code:"+252"},
+  {name:"South Africa",flag:"🇿🇦",code:"+27"},
+  {name:"South Korea",flag:"🇰🇷",code:"+82"},
+  {name:"Spain",flag:"🇪🇸",code:"+34"},
+  {name:"Sri Lanka",flag:"🇱🇰",code:"+94"},
+  {name:"Sudan",flag:"🇸🇩",code:"+249"},
+  {name:"Sweden",flag:"🇸🇪",code:"+46"},
+  {name:"Switzerland",flag:"🇨🇭",code:"+41"},
+  {name:"Syria",flag:"🇸🇾",code:"+963"},
+  {name:"Taiwan",flag:"🇹🇼",code:"+886"},
+  {name:"Tajikistan",flag:"🇹🇯",code:"+992"},
+  {name:"Tanzania",flag:"🇹🇿",code:"+255"},
+  {name:"Thailand",flag:"🇹🇭",code:"+66"},
+  {name:"Tunisia",flag:"🇹🇳",code:"+216"},
+  {name:"Turkey",flag:"🇹🇷",code:"+90"},
+  {name:"Uganda",flag:"🇺🇬",code:"+256"},
+  {name:"Ukraine",flag:"🇺🇦",code:"+380"},
+  {name:"United Arab Emirates",flag:"🇦🇪",code:"+971"},
+  {name:"United Kingdom",flag:"🇬🇧",code:"+44"},
+  {name:"United States",flag:"🇺🇸",code:"+1"},
+  {name:"Uzbekistan",flag:"🇺🇿",code:"+998"},
+  {name:"Vietnam",flag:"🇻🇳",code:"+84"},
+  {name:"Yemen",flag:"🇾🇪",code:"+967"},
 ];
 
-// Default: Afghanistan
 let selectedCountry = COUNTRIES[0];
 
-// ─────────────────────────────────────
-// SPLASH → LOGIN (3s)
-// ─────────────────────────────────────
+// ─── EMOJIS ───
+const EMOJIS = ['😀','😂','🥰','😍','🤩','😎','🥺','😢','😭','😡','🤔','🤗','👋','🙌','👍','❤️','🔥','💯','✨','🎉','🙏','💪','🚀','⭐','🌙','☀️','🌍','🎵','🎮','📱','💻','🏆','🌹','🍕','☕','🤲','💕','🥳','😴','🤭','👀','💀','🫡','🫢','🫣','🤌','🫶','🩷','🧡','💛','💚','💙','💜','🖤','🤍','🫀','⚡','🌈','🦋','🐼','🦊','🐯','🐺','🦁','🐸'];
+
+// ─── SPLASH → LOGIN ───
 setTimeout(() => {
   document.getElementById('splash').classList.add('hidden');
   document.getElementById('login').classList.remove('hidden');
   buildCountryList(COUNTRIES);
   setCountry(selectedCountry);
-}, 3000);
+  buildEmojiPicker();
+}, 2800);
 
-// ─────────────────────────────────────
-// COUNTRY SELECTOR
-// ─────────────────────────────────────
+// ─── COUNTRY SELECTOR ───
 function buildCountryList(list) {
   const container = document.getElementById('countryList');
   container.innerHTML = '';
@@ -131,303 +114,418 @@ function buildCountryList(list) {
     container.appendChild(div);
   });
 }
-
 function setCountry(c) {
   selectedCountry = c;
   document.getElementById('selectedFlag').textContent = c.flag;
   document.getElementById('selectedCode').textContent = c.code;
 }
-
 function toggleCountryDropdown() {
   const dd = document.getElementById('countryDropdown');
   dd.classList.toggle('hidden');
-  if (!dd.classList.contains('hidden')) {
-    document.getElementById('countrySearch').focus();
-  }
+  if (!dd.classList.contains('hidden')) document.getElementById('countrySearch').focus();
 }
-
 function closeCountryDropdown() {
   document.getElementById('countryDropdown').classList.add('hidden');
 }
-
-function filterCountries(query) {
-  const filtered = COUNTRIES.filter(c =>
-    c.name.toLowerCase().includes(query.toLowerCase()) ||
-    c.code.includes(query)
-  );
-  buildCountryList(filtered);
+function filterCountries(q) {
+  buildCountryList(COUNTRIES.filter(c => c.name.toLowerCase().includes(q.toLowerCase()) || c.code.includes(q)));
 }
-
-// Close dropdown when clicking outside
-document.addEventListener('click', (e) => {
-  const selector = document.getElementById('countrySelector');
-  const dropdown = document.getElementById('countryDropdown');
-  if (selector && dropdown && !selector.contains(e.target) && !dropdown.contains(e.target)) {
-    closeCountryDropdown();
-  }
+document.addEventListener('click', e => {
+  const sel = document.getElementById('countrySelector');
+  const dd = document.getElementById('countryDropdown');
+  if (sel && dd && !sel.contains(e.target) && !dd.contains(e.target)) closeCountryDropdown();
 });
 
-// ─────────────────────────────────────
-// TOAST
-// ─────────────────────────────────────
+// ─── TOAST ───
 function showToast(msg, color) {
-  const existing = document.querySelector('.toast');
-  if (existing) existing.remove();
+  const ex = document.querySelector('.toast');
+  if (ex) ex.remove();
   const t = document.createElement('div');
   t.className = 'toast';
   t.style.background = color || '#6c63ff';
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(() => t && t.remove(), 3500);
+  setTimeout(() => t && t.remove(), 3200);
 }
 
-// ─────────────────────────────────────
-// OTP SYSTEM
-// ─────────────────────────────────────
-let generatedOTP = '';
-let resendInterval = null;
-let resendSecs = 60;
-
-function generateOTP() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
-
-function showOTP() {
-  const phone = document.getElementById('phoneInput').value.trim();
-  if (phone.length < 5) {
-    showToast('⚠️ Enter a valid phone number', '#ff6584');
-    return;
+// ─── LOGIN ───
+function doLogin() {
+  const username = document.getElementById('usernameInput').value.trim();
+  if (!username || username.length < 2) {
+    showToast('⚠️ Enter a username (min 2 chars)', '#ff6584'); return;
   }
-
-  generatedOTP = generateOTP();
-
-  // In demo mode — show OTP as toast (production: send via Twilio SMS)
-  showToast(`📱 Your OTP: ${generatedOTP}  (Demo Mode)`, '#2e7d32');
-
-  document.getElementById('phoneSection').style.display = 'none';
-  document.getElementById('otpSection').classList.remove('hidden');
-
-  const masked = phone.slice(0, 2) + '****' + phone.slice(-2);
-  document.getElementById('otpHint').textContent =
-    `${selectedCountry.flag} ${selectedCountry.code} ${masked}`;
-
-  startResendTimer();
-  setTimeout(() => document.querySelector('.otp-box').focus(), 100);
-}
-
-function startResendTimer() {
-  resendSecs = 60;
-  const btn = document.getElementById('resendBtn');
-  const timer = document.getElementById('resendTimer');
-  btn.disabled = true;
-  timer.textContent = `Resend in ${resendSecs}s`;
-
-  resendInterval = setInterval(() => {
-    resendSecs--;
-    timer.textContent = `Resend in ${resendSecs}s`;
-    if (resendSecs <= 0) {
-      clearInterval(resendInterval);
-      btn.disabled = false;
-      timer.textContent = '';
-    }
-  }, 1000);
-}
-
-function resendOTP() {
-  generatedOTP = generateOTP();
-  showToast(`📱 New OTP: ${generatedOTP}  (Demo Mode)`, '#2e7d32');
-  document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.classList.remove('error'); });
-  document.querySelector('.otp-box').focus();
-  startResendTimer();
-}
-
-function otpNav(el, idx) {
-  el.value = el.value.replace(/\D/g, '');
-  const boxes = [...document.querySelectorAll('.otp-box')];
-
-  if (el.value.length === 1 && idx < 5) boxes[idx + 1].focus();
-
-  el.onkeydown = (e) => {
-    if (e.key === 'Backspace' && !el.value && idx > 0) boxes[idx - 1].focus();
-  };
-
-  // Auto verify when all 6 filled
-  if (boxes.every(b => b.value.length === 1)) setTimeout(verifyOTP, 300);
-}
-
-function verifyOTP() {
-  const boxes = [...document.querySelectorAll('.otp-box')];
-  const entered = boxes.map(b => b.value).join('');
-
-  if (entered.length < 6) {
-    showToast('⚠️ Enter all 6 digits', '#ff6584');
-    return;
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    showToast('⚠️ Only letters, numbers, underscore', '#ff6584'); return;
   }
-
-  if (entered !== generatedOTP) {
-    showToast('❌ Wrong OTP! Check and try again', '#ff6584');
-    boxes.forEach(b => { b.value = ''; b.classList.add('error'); });
-    setTimeout(() => boxes.forEach(b => b.classList.remove('error')), 1500);
-    boxes[0].focus();
-    return;
-  }
-
-  clearInterval(resendInterval);
-  showToast('✅ Verified! Welcome to MÎK Messenger 🎉', '#2e7d32');
-  setTimeout(enterApp, 900);
+  myUsername = username;
+  enterApp();
 }
 
-function backToPhone() {
-  clearInterval(resendInterval);
-  document.getElementById('otpSection').classList.add('hidden');
-  document.getElementById('phoneSection').style.display = 'block';
-  document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.classList.remove('error'); });
+function googleLogin() {
+  showToast('⚙️ Google login — add your Client ID in app.js', '#e65100');
+}
+function appleLogin() {
+  showToast('🍎 Apple login — configure in Apple Developer portal', '#555');
 }
 
-// ─────────────────────────────────────
-// GOOGLE SIGN-IN
-// ─────────────────────────────────────
-// STEP 1: Go to https://console.cloud.google.com
-// STEP 2: Create project → APIs & Services → Credentials → OAuth 2.0 Client ID
-// STEP 3: Add your Render URL to Authorized Origins
-// STEP 4: Replace YOUR_GOOGLE_CLIENT_ID below with your actual Client ID
-
-const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID'; // <-- paste your Client ID here
-
-function signInWithGoogle() {
-  if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
-    showToast('⚙️ Add your Google Client ID in app.js to enable Google login', '#e65100');
-    return;
-  }
-
-  google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback: handleGoogleResponse,
-  });
-
-  google.accounts.id.prompt((notification) => {
-    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-      // Fallback: open popup
-      google.accounts.id.renderButton(
-        document.getElementById('googleBtn'),
-        { theme: 'filled_black', size: 'large', width: 200 }
-      );
-    }
-  });
-}
-
-function handleGoogleResponse(response) {
-  // Decode JWT to get user info
-  const payload = JSON.parse(atob(response.credential.split('.')[1]));
-  showToast(`✅ Welcome, ${payload.name}! 🎉`, '#2e7d32');
-  setTimeout(enterApp, 900);
-}
-
-// ─────────────────────────────────────
-// APPLE SIGN-IN
-// ─────────────────────────────────────
-// Apple Sign In requires:
-// 1. Apple Developer account ($99/yr)
-// 2. Service ID configured at developer.apple.com
-// 3. Your domain verified
-// For now shows setup message
-
-function signInWithApple() {
-  showToast('🍎 Apple Sign In — set up in Apple Developer portal', '#555');
-  // When ready, load Apple JS SDK and call:
-  // AppleID.auth.signIn()
-}
-
-// ─────────────────────────────────────
-// ENTER APP
-// ─────────────────────────────────────
+// ─── ENTER APP ───
 function enterApp() {
   document.getElementById('login').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  document.getElementById('messages').scrollTop = 99999;
+
+  // Set my avatar
+  const initial = myUsername[0].toUpperCase();
+  document.getElementById('myAvatarSmall').textContent = initial;
+
+  // Add my story
+  const storyRow = document.getElementById('storyRow');
+  const myStory = document.createElement('div');
+  myStory.className = 'story-item';
+  myStory.innerHTML = `
+    <div class="story-ring"><div class="story-inner" style="background:linear-gradient(135deg,#6c63ff,#ff6584)">${initial}</div></div>
+    <span class="story-name">You</span>`;
+  storyRow.appendChild(myStory);
+
+  connectWebSocket();
 }
 
-// ─────────────────────────────────────
-// TABS
-// ─────────────────────────────────────
-function switchTab(el) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+// ─── WEBSOCKET ───
+function connectWebSocket() {
+  setConnStatus('connecting');
+
+  try {
+    ws = new WebSocket(WS_URL);
+  } catch(e) {
+    setConnStatus('disconnected');
+    scheduleReconnect();
+    return;
+  }
+
+  ws.onopen = () => {
+    setConnStatus('connected');
+    clearTimeout(reconnectTimer);
+    // Join the server with my username
+    wsSend({ type: 'join', user: myUsername });
+    showToast(`✅ Connected as ${myUsername}`, '#43e97b');
+  };
+
+  ws.onmessage = (event) => {
+    let msg;
+    try { msg = JSON.parse(event.data); } catch { return; }
+    handleIncoming(msg);
+  };
+
+  ws.onclose = () => {
+    setConnStatus('disconnected');
+    scheduleReconnect();
+  };
+
+  ws.onerror = () => {
+    setConnStatus('disconnected');
+  };
 }
 
-// ─────────────────────────────────────
-// CHAT OPEN / BACK
-// ─────────────────────────────────────
-function openChat(el, name, emoji, bg, status) {
-  document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'));
-  el.classList.add('active');
+function wsSend(data) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(data));
+  }
+}
 
-  document.getElementById('chatName').textContent = name;
-  document.getElementById('chatAvatar').textContent = emoji;
-  document.getElementById('chatAvatar').style.background = bg;
-  document.getElementById('chatStatus').textContent =
-    status === 'online' ? '● Online' : status === 'group' ? '👥 Group' : '⏺ Last seen recently';
+function scheduleReconnect() {
+  clearTimeout(reconnectTimer);
+  reconnectTimer = setTimeout(() => {
+    if (myUsername) connectWebSocket();
+  }, 4000);
+}
 
+function setConnStatus(status) {
+  const el = document.getElementById('connStatus');
+  el.className = 'conn-status ' + status;
+  el.textContent = status === 'connected' ? `✅ Connected as ${myUsername}`
+    : status === 'connecting' ? '⏳ Connecting...'
+    : '🔴 Disconnected — retrying...';
+}
+
+// ─── HANDLE INCOMING MESSAGES ───
+function handleIncoming(msg) {
+  if (msg.type === 'system') {
+    // Someone joined/left — show in current chat if open
+    appendSysMsg(msg.message);
+    return;
+  }
+
+  if (msg.type === 'msg') {
+    const other = msg.from === myUsername ? msg.to : msg.from;
+    const isMine = msg.from === myUsername;
+
+    // Init chat if new
+    if (!chats[other]) initChat(other);
+
+    // Store message
+    chats[other].messages.push({
+      from: msg.from,
+      text: msg.text,
+      time: msg.timestamp || Date.now(),
+      mine: isMine
+    });
+
+    // Update preview
+    chats[other].lastMsg = msg.text;
+    chats[other].lastTime = msg.timestamp || Date.now();
+
+    // Unread count
+    if (currentChat !== other && !isMine) {
+      chats[other].unread = (chats[other].unread || 0) + 1;
+    }
+
+    // Render in chat if open
+    if (currentChat === other) {
+      renderMessage({ from: msg.from, text: msg.text, time: msg.timestamp || Date.now(), mine: isMine });
+      scrollToBottom();
+      // Remove typing indicator
+      removeTyping();
+    }
+
+    // Refresh chat list
+    refreshChatList();
+  }
+}
+
+function initChat(username) {
+  if (chats[username]) return;
+  chats[username] = { messages: [], unread: 0, online: false, lastMsg: '', lastTime: Date.now() };
+}
+
+// ─── NEW CHAT ───
+function showNewChat() {
+  document.getElementById('newChatModal').classList.remove('hidden');
+  document.getElementById('findUserInput').focus();
+}
+function hideNewChat() {
+  document.getElementById('newChatModal').classList.add('hidden');
+  document.getElementById('findUserInput').value = '';
+}
+function startChat() {
+  const target = document.getElementById('findUserInput').value.trim();
+  if (!target) { showToast('⚠️ Enter a username', '#ff6584'); return; }
+  if (target === myUsername) { showToast('⚠️ That\'s you!', '#ff6584'); return; }
+  hideNewChat();
+  openChat(target);
+}
+
+// ─── OPEN CHAT ───
+function openChat(username) {
+  currentChat = username;
+  initChat(username);
+  chats[username].unread = 0;
+
+  // Update topbar
+  document.getElementById('chatName').textContent = username;
+  document.getElementById('chatStatus').textContent = chats[username].online ? '● Online' : '⏺ Last seen recently';
+  const color = avatarColor(username);
+  document.getElementById('topbarAvatar').textContent = username[0].toUpperCase();
+  document.getElementById('topbarAvatar').style.background = color;
+
+  // Show chat area
+  document.getElementById('chatArea').classList.remove('hidden');
+  document.getElementById('noChatSelected').style.display = 'none';
   document.getElementById('app').classList.add('chat-open');
+
+  // Highlight in sidebar
+  document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'));
+  const item = document.getElementById('ci-' + username);
+  if (item) item.classList.add('active');
+
+  // Render messages
+  const wrap = document.getElementById('messages');
+  wrap.innerHTML = '<div class="date-divider">Today</div>';
+
+  if (chats[username].messages.length === 0) {
+    wrap.innerHTML += `<div class="welcome-msg"><div class="welcome-bubble">👋 Say hi to ${username}!</div></div>`;
+  } else {
+    chats[username].messages.forEach(m => renderMessage(m));
+  }
+
+  scrollToBottom();
+  refreshChatList();
+  document.getElementById('msgInput').focus();
 }
 
-function backToList() {
-  document.getElementById('app').classList.remove('chat-open');
+// ─── RENDER MESSAGE ───
+function renderMessage(m) {
+  const wrap = document.getElementById('messages');
+  // Remove welcome msg
+  const welcome = wrap.querySelector('.welcome-msg');
+  if (welcome) welcome.remove();
+
+  const time = new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  const color = avatarColor(m.from);
+  const initial = m.from[0].toUpperCase();
+
+  const div = document.createElement('div');
+  div.className = 'msg ' + (m.mine ? 'sent' : 'received');
+  div.innerHTML = `
+    <div class="msg-avatar-sm" style="background:${color}">${initial}</div>
+    <div>
+      <div class="msg-bubble">${escHtml(m.text)}</div>
+      <div class="msg-time">${time}${m.mine ? ' <span class="tick delivered">✓✓</span>' : ''}</div>
+    </div>`;
+  wrap.appendChild(div);
 }
 
-// ─────────────────────────────────────
-// SEND MESSAGE
-// ─────────────────────────────────────
+// ─── SEND MESSAGE ───
 function sendMsg() {
   const input = document.getElementById('msgInput');
   const text = input.value.trim();
-  if (!text) return;
+  if (!text || !currentChat) return;
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    showToast('⚠️ Not connected! Reconnecting...', '#ff6584');
+    connectWebSocket(); return;
+  }
 
-  const msgs = document.getElementById('messages');
-  const now = new Date();
-  const time = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
-
-  // Remove typing indicator
-  const typing = msgs.querySelector('.typing-indicator');
-  if (typing) typing.remove();
-
-  // Add sent message
-  const msg = document.createElement('div');
-  msg.className = 'msg sent';
-  msg.innerHTML = `
-    <div class="msg-avatar" style="background:#1e1040">🦊</div>
-    <div>
-      <div class="msg-bubble">${escapeHtml(text)}</div>
-      <div class="msg-time">${time} <span class="tick">✓✓</span></div>
-    </div>`;
-  msgs.appendChild(msg);
-
-  // Re-add typing indicator
-  const typing2 = document.createElement('div');
-  typing2.className = 'typing-indicator';
-  typing2.innerHTML = `
-    <div class="msg-avatar" style="background:#1a2520;width:28px;height:28px;border-radius:8px;font-size:11px;display:flex;align-items:center;justify-content:center;">🐼</div>
-    <div class="typing-dots">
-      <div class="typing-dot"></div>
-      <div class="typing-dot"></div>
-      <div class="typing-dot"></div>
-    </div>`;
-  msgs.appendChild(typing2);
-
+  wsSend({ type: 'private_msg', to: currentChat, text });
   input.value = '';
   input.style.height = 'auto';
-  msgs.scrollTop = msgs.scrollHeight;
+  hideEmoji();
 }
 
 function handleKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
 }
-
 function autoResize(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 100) + 'px';
 }
 
-function escapeHtml(text) {
-  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
+// ─── REFRESH CHAT LIST ───
+function refreshChatList() {
+  const list = document.getElementById('chatList');
+  const sorted = Object.entries(chats).sort((a,b) => (b[1].lastTime||0) - (a[1].lastTime||0));
+
+  if (sorted.length === 0) {
+    list.innerHTML = `<div class="empty-chats"><div style="font-size:48px;margin-bottom:12px">💬</div><p>No conversations yet</p><p style="font-size:12px;margin-top:4px">Tap ✏️ to start chatting!</p></div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  sorted.forEach(([username, data]) => {
+    const color = avatarColor(username);
+    const initial = username[0].toUpperCase();
+    const time = data.lastTime ? timeAgo(data.lastTime) : '';
+    const isActive = currentChat === username;
+
+    const item = document.createElement('div');
+    item.className = 'chat-item' + (isActive ? ' active' : '') + (data.unread ? ' unread' : '');
+    item.id = 'ci-' + username;
+    item.onclick = () => openChat(username);
+    item.innerHTML = `
+      <div class="chat-avatar${data.online ? ' online' : ''}" style="background:${color}">${initial}</div>
+      <div class="chat-info">
+        <div class="chat-name">${escHtml(username)}</div>
+        <div class="chat-preview">${escHtml(data.lastMsg || 'Start chatting!')}</div>
+      </div>
+      <div class="chat-meta">
+        <span class="chat-time">${time}</span>
+        ${data.unread ? `<span class="badge">${data.unread}</span>` : ''}
+      </div>`;
+    list.appendChild(item);
+  });
+}
+
+// ─── SYSTEM MESSAGE ───
+function appendSysMsg(text) {
+  if (!currentChat) return;
+  const wrap = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'sys-msg';
+  div.textContent = text;
+  wrap.appendChild(div);
+  scrollToBottom();
+}
+
+// ─── TYPING INDICATOR ───
+let typingTimeout = null;
+function removeTyping() {
+  const t = document.getElementById('messages').querySelector('.typing-indicator');
+  if (t) t.remove();
+}
+
+// ─── EMOJI PICKER ───
+function buildEmojiPicker() {
+  const grid = document.getElementById('emojiGrid');
+  EMOJIS.forEach(e => {
+    const span = document.createElement('span');
+    span.textContent = e;
+    span.onclick = () => {
+      const input = document.getElementById('msgInput');
+      input.value += e;
+      input.focus();
+    };
+    grid.appendChild(span);
+  });
+}
+function toggleEmoji() {
+  document.getElementById('emojiPicker').classList.toggle('hidden');
+}
+function hideEmoji() {
+  document.getElementById('emojiPicker').classList.add('hidden');
+}
+document.addEventListener('click', e => {
+  const picker = document.getElementById('emojiPicker');
+  const btn = document.querySelector('.emoji-btn');
+  if (picker && btn && !picker.contains(e.target) && !btn.contains(e.target)) hideEmoji();
+});
+
+// ─── TABS ───
+let currentTab = 'all';
+function switchTab(el, tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentTab = tab;
+}
+
+// ─── SEARCH ───
+function filterChats(q) {
+  document.querySelectorAll('.chat-item').forEach(item => {
+    const name = item.querySelector('.chat-name')?.textContent.toLowerCase() || '';
+    item.style.display = name.includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+// ─── NAV ───
+function setNav(el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ─── BACK ───
+function backToList() {
+  document.getElementById('app').classList.remove('chat-open');
+  currentChat = '';
+}
+
+// ─── UTILS ───
+function avatarColor(username) {
+  const colors = ['#6c63ff','#ff6584','#43e97b','#f7971e','#0072ff','#ee0979','#11998e','#8e2de2'];
+  let hash = 0;
+  for (let c of username) hash = c.charCodeAt(0) + ((hash<<5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return 'now';
+  if (diff < 3600000) return Math.floor(diff/60000) + 'm';
+  if (diff < 86400000) return Math.floor(diff/3600000) + 'h';
+  return Math.floor(diff/86400000) + 'd';
+}
+
+function scrollToBottom() {
+  const wrap = document.getElementById('messages');
+  setTimeout(() => wrap.scrollTop = wrap.scrollHeight, 50);
+}
+
+function escHtml(text) {
+  return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+   
