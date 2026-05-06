@@ -152,10 +152,7 @@ function showToast(msg, color) {
 function doLogin() {
   const username = document.getElementById('usernameInput').value.trim();
   if (!username || username.length < 2) {
-    showToast('⚠️ Enter a username (min 2 chars)', '#ff6584'); return;
-  }
-  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-    showToast('⚠️ Only letters, numbers, underscore', '#ff6584'); return;
+    showToast('⚠️ Min 2 characters!', '#ff6584'); return;
   }
   myUsername = username;
   enterApp();
