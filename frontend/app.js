@@ -5,7 +5,7 @@
 
 // ─── CONFIG ───
 // Your Render WebSocket server URL
-const WS_URL = 'wss://mik-messenger-1.onrender.com';
+const WS_URL = 'wss://mik-messenger-ws.onrender.com';
 
 // ─── STATE ───
 let myUsername = '';
