@@ -1,20 +1,21 @@
-/* ═══════════════════════════════════════
-   MÎK MESSENGER v2 — app.js
-   Real WebSocket Chat + Full Features
-═══════════════════════════════════════ */
+/* ══════════════════════════════
+   MÎK MESSENGER — app.js
+   Real WebSocket + Clean UI
+══════════════════════════════ */
 
-// ─── CONFIG ───
-// Your Render WebSocket server URL
 const WS_URL = 'wss://mik-messenger-ws.onrender.com';
 
-// ─── STATE ───
-let myUsername = '';
+// ── State ──
+let myName = '';
 let currentChat = '';
 let ws = null;
-let chats = {};       // { username: { messages:[], unread:0, online:false } }
-let reconnectTimer = null;
+let chats = {};
+let reconnTimer = null;
+let generatedOTP = '';
+let resendInterval = null;
+let selectedCountry = { name:'Afghanistan', flag:'🇦🇫', code:'+93' };
 
-// ─── COUNTRIES ───
+// ── Countries ──
 const COUNTRIES = [
   {name:"Afghanistan",flag:"🇦🇫",code:"+93"},
   {name:"Albania",flag:"🇦🇱",code:"+355"},
@@ -30,7 +31,6 @@ const COUNTRIES = [
   {name:"Canada",flag:"🇨🇦",code:"+1"},
   {name:"China",flag:"🇨🇳",code:"+86"},
   {name:"Egypt",flag:"🇪🇬",code:"+20"},
-  {name:"Ethiopia",flag:"🇪🇹",code:"+251"},
   {name:"France",flag:"🇫🇷",code:"+33"},
   {name:"Germany",flag:"🇩🇪",code:"+49"},
   {name:"Ghana",flag:"🇬🇭",code:"+233"},
@@ -38,11 +38,9 @@ const COUNTRIES = [
   {name:"Indonesia",flag:"🇮🇩",code:"+62"},
   {name:"Iran",flag:"🇮🇷",code:"+98"},
   {name:"Iraq",flag:"🇮🇶",code:"+964"},
-  {name:"Ireland",flag:"🇮🇪",code:"+353"},
   {name:"Italy",flag:"🇮🇹",code:"+39"},
   {name:"Japan",flag:"🇯🇵",code:"+81"},
   {name:"Jordan",flag:"🇯🇴",code:"+962"},
-  {name:"Kazakhstan",flag:"🇰🇿",code:"+7"},
   {name:"Kenya",flag:"🇰🇪",code:"+254"},
   {name:"Kuwait",flag:"🇰🇼",code:"+965"},
   {name:"Lebanon",flag:"🇱🇧",code:"+961"},
@@ -58,7 +56,6 @@ const COUNTRIES = [
   {name:"Palestine",flag:"🇵🇸",code:"+970"},
   {name:"Philippines",flag:"🇵🇭",code:"+63"},
   {name:"Poland",flag:"🇵🇱",code:"+48"},
-  {name:"Portugal",flag:"🇵🇹",code:"+351"},
   {name:"Qatar",flag:"🇶🇦",code:"+974"},
   {name:"Russia",flag:"🇷🇺",code:"+7"},
   {name:"Saudi Arabia",flag:"🇸🇦",code:"+966"},
@@ -73,7 +70,6 @@ const COUNTRIES = [
   {name:"Switzerland",flag:"🇨🇭",code:"+41"},
   {name:"Syria",flag:"🇸🇾",code:"+963"},
   {name:"Taiwan",flag:"🇹🇼",code:"+886"},
-  {name:"Tajikistan",flag:"🇹🇯",code:"+992"},
   {name:"Tanzania",flag:"🇹🇿",code:"+255"},
   {name:"Thailand",flag:"🇹🇭",code:"+66"},
   {name:"Tunisia",flag:"🇹🇳",code:"+216"},
@@ -88,441 +84,388 @@ const COUNTRIES = [
   {name:"Yemen",flag:"🇾🇪",code:"+967"},
 ];
 
-let selectedCountry = COUNTRIES[0];
+const EMOJIS = ['😀','😂','🥰','😍','🤩','😎','🥺','😢','😭','😡','🤔','🤗','👋','🙌','👍','👎','❤️','🔥','💯','✨','🎉','🙏','💪','🚀','⭐','🌙','☀️','💕','🫡','🫢','😴','🤭','💀','👀','🤌','🫶','⚡','🌈','🦋','🎵','🎮','📱','💻','🏆','🍕','☕','🤲'];
 
-// ─── EMOJIS ───
-const EMOJIS = ['😀','😂','🥰','😍','🤩','😎','🥺','😢','😭','😡','🤔','🤗','👋','🙌','👍','❤️','🔥','💯','✨','🎉','🙏','💪','🚀','⭐','🌙','☀️','🌍','🎵','🎮','📱','💻','🏆','🌹','🍕','☕','🤲','💕','🥳','😴','🤭','👀','💀','🫡','🫢','🫣','🤌','🫶','🩷','🧡','💛','💚','💙','💜','🖤','🤍','🫀','⚡','🌈','🦋','🐼','🦊','🐯','🐺','🦁','🐸'];
-
-// ─── SPLASH → LOGIN ───
+// ── Init ──
 setTimeout(() => {
   document.getElementById('splash').classList.add('hidden');
   document.getElementById('login').classList.remove('hidden');
-  buildCountryList(COUNTRIES);
+  buildCountries(COUNTRIES);
   setCountry(selectedCountry);
-  buildEmojiPicker();
-}, 2800);
+  buildEmojis();
+  // Auto-fill saved name
+  try {
+    const saved = localStorage.getItem('mik_name');
+    if (saved) { document.getElementById('nameInput').value = saved; }
+  } catch(e){}
+}, 2500);
 
-// ─── COUNTRY SELECTOR ───
-function buildCountryList(list) {
-  const container = document.getElementById('countryList');
-  container.innerHTML = '';
+// ── Country ──
+function buildCountries(list) {
+  const el = document.getElementById('countryList');
+  el.innerHTML = '';
   list.forEach(c => {
-    const div = document.createElement('div');
-    div.className = 'country-option';
-    div.innerHTML = `<span class="flag">${c.flag}</span><span class="name">${c.name}</span><span class="code">${c.code}</span>`;
-    div.onclick = () => { setCountry(c); closeCountryDropdown(); };
-    container.appendChild(div);
+    const d = document.createElement('div');
+    d.className = 'c-opt';
+    d.innerHTML = `<span class="fl">${c.flag}</span><span class="nm">${c.name}</span><span class="cd">${c.code}</span>`;
+    d.onclick = () => { setCountry(c); closeDropdown(); };
+    el.appendChild(d);
   });
 }
 function setCountry(c) {
   selectedCountry = c;
-  document.getElementById('selectedFlag').textContent = c.flag;
-  document.getElementById('selectedCode').textContent = c.code;
+  document.getElementById('selFlag').textContent = c.flag;
+  document.getElementById('selCode').textContent = c.code;
 }
-function toggleCountryDropdown() {
-  const dd = document.getElementById('countryDropdown');
-  dd.classList.toggle('hidden');
-  if (!dd.classList.contains('hidden')) document.getElementById('countrySearch').focus();
+function toggleDropdown() {
+  const d = document.getElementById('dropdown');
+  d.classList.toggle('hidden');
+  if (!d.classList.contains('hidden')) document.getElementById('countrySearch').focus();
 }
-function closeCountryDropdown() {
-  document.getElementById('countryDropdown').classList.add('hidden');
-}
+function closeDropdown() { document.getElementById('dropdown').classList.add('hidden'); }
 function filterCountries(q) {
-  buildCountryList(COUNTRIES.filter(c => c.name.toLowerCase().includes(q.toLowerCase()) || c.code.includes(q)));
+  buildCountries(COUNTRIES.filter(c => c.name.toLowerCase().includes(q.toLowerCase()) || c.code.includes(q)));
 }
 document.addEventListener('click', e => {
-  const sel = document.getElementById('countrySelector');
-  const dd = document.getElementById('countryDropdown');
-  if (sel && dd && !sel.contains(e.target) && !dd.contains(e.target)) closeCountryDropdown();
+  const btn = document.getElementById('countryBtn');
+  const dd = document.getElementById('dropdown');
+  if (btn && dd && !btn.contains(e.target) && !dd.contains(e.target)) closeDropdown();
 });
 
-// ─── TOAST ───
-function showToast(msg, color) {
-  const ex = document.querySelector('.toast');
-  if (ex) ex.remove();
-  const t = document.createElement('div');
-  t.className = 'toast';
-  t.style.background = color || '#6c63ff';
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t && t.remove(), 3200);
+// ── OTP ──
+function sendOTP() {
+  const phone = document.getElementById('phoneInput').value.trim();
+  if (phone.length < 5) { showToast('Enter a valid phone number', 'error'); return; }
+  generatedOTP = String(Math.floor(100000 + Math.random() * 900000));
+  showToast(`OTP: ${generatedOTP} (Demo)`, 'success');
+  document.getElementById('phoneStep').classList.add('hidden');
+  document.getElementById('otpStep').classList.remove('hidden');
+  document.getElementById('otpSentTo').textContent = `We sent a code to ${selectedCountry.code} ${phone.slice(0,3)}***${phone.slice(-2)}`;
+  startResend();
+  setTimeout(() => document.querySelector('.otp-box').focus(), 100);
 }
 
-// ─── LOGIN ───
-function doLogin() {
-  const username = document.getElementById('usernameInput').value.trim();
-  if (!username || username.length < 2) {
-    showToast('⚠️ Min 2 characters!', '#ff6584'); return;
+function otpType(el, idx) {
+  el.value = el.value.replace(/\D/g,'');
+  const boxes = [...document.querySelectorAll('.otp-box')];
+  if (el.value && idx < 5) boxes[idx+1].focus();
+  el.onkeydown = e => { if (e.key==='Backspace' && !el.value && idx>0) boxes[idx-1].focus(); };
+  if (boxes.every(b => b.value)) setTimeout(verifyOTP, 200);
+}
+
+function verifyOTP() {
+  const entered = [...document.querySelectorAll('.otp-box')].map(b=>b.value).join('');
+  if (entered !== generatedOTP) {
+    showToast('Wrong OTP! Try again', 'error');
+    document.querySelectorAll('.otp-box').forEach(b => { b.value=''; b.style.borderColor='#e53935'; });
+    setTimeout(() => document.querySelectorAll('.otp-box').forEach(b => b.style.borderColor=''), 1500);
+    document.querySelector('.otp-box').focus();
+    return;
   }
-  myUsername = username;
+  clearInterval(resendInterval);
+  document.getElementById('otpStep').classList.add('hidden');
+  document.getElementById('profileStep').classList.remove('hidden');
+}
+
+function startResend() {
+  let s = 60;
+  const btn = document.getElementById('resendBtn');
+  const timer = document.getElementById('resendTimer');
+  btn.disabled = true;
+  timer.textContent = `${s}s`;
+  resendInterval = setInterval(() => {
+    s--;
+    timer.textContent = s > 0 ? `${s}s` : '';
+    if (s <= 0) { clearInterval(resendInterval); btn.disabled = false; }
+  }, 1000);
+}
+
+function resendOTP() {
+  generatedOTP = String(Math.floor(100000 + Math.random() * 900000));
+  showToast(`New OTP: ${generatedOTP} (Demo)`, 'success');
+  document.querySelectorAll('.otp-box').forEach(b => b.value = '');
+  document.querySelector('.otp-box').focus();
+  startResend();
+}
+
+function backToPhone() {
+  clearInterval(resendInterval);
+  document.getElementById('otpStep').classList.add('hidden');
+  document.getElementById('phoneStep').classList.remove('hidden');
+  document.querySelectorAll('.otp-box').forEach(b => b.value='');
+}
+
+function finishSetup() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name || name.length < 2) { showToast('Enter your name (min 2 chars)', 'error'); return; }
+  myName = name;
+  try { localStorage.setItem('mik_name', name); } catch(e){}
   enterApp();
 }
 
-function googleLogin() {
-  showToast('⚙️ Google login — add your Client ID in app.js', '#e65100');
-}
-function appleLogin() {
-  showToast('🍎 Apple login — configure in Apple Developer portal', '#555');
-}
+function googleLogin() { showToast('Add Google Client ID in app.js to enable', 'info'); }
+function appleLogin() { showToast('Configure Apple Sign In in Apple Developer portal', 'info'); }
 
-// ─── ENTER APP ───
+// ── Enter App ──
 function enterApp() {
   document.getElementById('login').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-
-  // Set my avatar
-  const initial = myUsername[0].toUpperCase();
-  document.getElementById('myAvatarSmall').textContent = initial;
-
-  // Add my story
-  const storyRow = document.getElementById('storyRow');
-  const myStory = document.createElement('div');
-  myStory.className = 'story-item';
-  myStory.innerHTML = `
-    <div class="story-ring"><div class="story-inner" style="background:linear-gradient(135deg,#6c63ff,#ff6584)">${initial}</div></div>
-    <span class="story-name">You</span>`;
-  storyRow.appendChild(myStory);
-
-  connectWebSocket();
+  const init = myName[0].toUpperCase();
+  document.getElementById('myAvatar').textContent = init;
+  document.getElementById('myAvatar').style.background = avatarColor(myName);
+  connectWS();
 }
 
-// ─── WEBSOCKET ───
-function connectWebSocket() {
-  setConnStatus('connecting');
-
-  try {
-    ws = new WebSocket(WS_URL);
-  } catch(e) {
-    setConnStatus('disconnected');
-    scheduleReconnect();
-    return;
-  }
-
+// ── WebSocket ──
+function connectWS() {
+  setStatus('connecting');
+  try { ws = new WebSocket(WS_URL); } catch(e) { setStatus('disconnected'); schedReconnect(); return; }
   ws.onopen = () => {
-    setConnStatus('connected');
-    clearTimeout(reconnectTimer);
-    // Join the server with my username
-    wsSend({ type: 'join', user: myUsername });
-    showToast(`✅ Connected as ${myUsername}`, '#43e97b');
+    setStatus('connected');
+    clearTimeout(reconnTimer);
+    wsSend({ type:'join', user:myName });
   };
-
-  ws.onmessage = (event) => {
-    let msg;
-    try { msg = JSON.parse(event.data); } catch { return; }
-    handleIncoming(msg);
+  ws.onmessage = e => {
+    try { handleMsg(JSON.parse(e.data)); } catch(err){}
   };
-
-  ws.onclose = () => {
-    setConnStatus('disconnected');
-    scheduleReconnect();
-  };
-
-  ws.onerror = () => {
-    setConnStatus('disconnected');
-  };
+  ws.onclose = () => { setStatus('disconnected'); schedReconnect(); };
+  ws.onerror = () => { setStatus('disconnected'); };
 }
 
 function wsSend(data) {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(data));
-  }
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data));
 }
 
-function scheduleReconnect() {
-  clearTimeout(reconnectTimer);
-  reconnectTimer = setTimeout(() => {
-    if (myUsername) connectWebSocket();
-  }, 4000);
+function schedReconnect() {
+  clearTimeout(reconnTimer);
+  reconnTimer = setTimeout(() => { if (myName) connectWS(); }, 5000);
 }
 
-function setConnStatus(status) {
-  const el = document.getElementById('connStatus');
-  el.className = 'conn-status ' + status;
-  el.textContent = status === 'connected' ? `✅ Connected as ${myUsername}`
-    : status === 'connecting' ? '⏳ Connecting...'
-    : '🔴 Disconnected — retrying...';
+function setStatus(s) {
+  const el = document.getElementById('statusBar');
+  const txt = document.getElementById('statusText');
+  el.className = 'status-bar ' + s;
+  txt.textContent = s==='connected' ? `✓ Connected as ${myName}`
+    : s==='connecting' ? 'Connecting...'
+    : 'Disconnected — retrying in 5s...';
 }
 
-// ─── HANDLE INCOMING MESSAGES ───
-function handleIncoming(msg) {
+// ── Handle incoming ──
+function handleMsg(msg) {
   if (msg.type === 'system') {
-    // Someone joined/left — show in current chat if open
-    appendSysMsg(msg.message);
+    if (currentChat) appendSys(msg.message);
     return;
   }
-
   if (msg.type === 'msg') {
-    const other = msg.from === myUsername ? msg.to : msg.from;
-    const isMine = msg.from === myUsername;
-
-    // Init chat if new
+    const other = msg.from === myName ? msg.to : msg.from;
+    const mine = msg.from === myName;
     if (!chats[other]) initChat(other);
-
-    // Store message
-    chats[other].messages.push({
-      from: msg.from,
-      text: msg.text,
-      time: msg.timestamp || Date.now(),
-      mine: isMine
-    });
-
-    // Update preview
+    chats[other].msgs.push({ from:msg.from, text:msg.text, time:msg.timestamp||Date.now(), mine });
     chats[other].lastMsg = msg.text;
-    chats[other].lastTime = msg.timestamp || Date.now();
-
-    // Unread count
-    if (currentChat !== other && !isMine) {
-      chats[other].unread = (chats[other].unread || 0) + 1;
-    }
-
-    // Render in chat if open
-    if (currentChat === other) {
-      renderMessage({ from: msg.from, text: msg.text, time: msg.timestamp || Date.now(), mine: isMine });
-      scrollToBottom();
-      // Remove typing indicator
-      removeTyping();
-    }
-
-    // Refresh chat list
-    refreshChatList();
+    chats[other].lastTime = msg.timestamp||Date.now();
+    if (currentChat !== other && !mine) chats[other].unread = (chats[other].unread||0)+1;
+    if (currentChat === other) { renderBubble(chats[other].msgs.at(-1)); scrollBottom(); }
+    refreshList();
   }
 }
 
-function initChat(username) {
-  if (chats[username]) return;
-  chats[username] = { messages: [], unread: 0, online: false, lastMsg: '', lastTime: Date.now() };
+function initChat(u) {
+  if (!chats[u]) chats[u] = { msgs:[], unread:0, lastMsg:'', lastTime:Date.now() };
 }
 
-// ─── NEW CHAT ───
-function showNewChat() {
-  document.getElementById('newChatModal').classList.remove('hidden');
-  document.getElementById('findUserInput').focus();
-}
-function hideNewChat() {
-  document.getElementById('newChatModal').classList.add('hidden');
-  document.getElementById('findUserInput').value = '';
-}
-function startChat() {
-  const target = document.getElementById('findUserInput').value.trim();
-  if (!target) { showToast('⚠️ Enter a username', '#ff6584'); return; }
-  if (target === myUsername) { showToast('⚠️ That\'s you!', '#ff6584'); return; }
+// ── New Chat ──
+function showNewChat() { document.getElementById('newChatModal').classList.remove('hidden'); document.getElementById('newChatInput').focus(); }
+function hideNewChat() { document.getElementById('newChatModal').classList.add('hidden'); document.getElementById('newChatInput').value=''; }
+function startNewChat() {
+  const u = document.getElementById('newChatInput').value.trim();
+  if (!u) { showToast('Enter a username', 'error'); return; }
+  if (u === myName) { showToast("That's you!", 'error'); return; }
   hideNewChat();
-  openChat(target);
+  openChat(u);
 }
 
-// ─── OPEN CHAT ───
-function openChat(username) {
-  currentChat = username;
-  initChat(username);
-  chats[username].unread = 0;
+// ── Open Chat ──
+function openChat(u) {
+  currentChat = u;
+  initChat(u);
+  chats[u].unread = 0;
 
-  // Update topbar
-  document.getElementById('chatName').textContent = username;
-  document.getElementById('chatStatus').textContent = chats[username].online ? '● Online' : '⏺ Last seen recently';
-  const color = avatarColor(username);
-  document.getElementById('topbarAvatar').textContent = username[0].toUpperCase();
-  document.getElementById('topbarAvatar').style.background = color;
+  // Update header
+  document.getElementById('peerName').textContent = u;
+  document.getElementById('peerStatus').textContent = 'tap here for contact info';
+  const av = document.getElementById('peerAvatar');
+  av.textContent = u[0].toUpperCase();
+  av.style.background = avatarColor(u);
 
   // Show chat area
   document.getElementById('chatArea').classList.remove('hidden');
-  document.getElementById('noChatSelected').style.display = 'none';
+  document.getElementById('noChat').style.display = 'none';
   document.getElementById('app').classList.add('chat-open');
 
-  // Highlight in sidebar
-  document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'));
-  const item = document.getElementById('ci-' + username);
-  if (item) item.classList.add('active');
+  // Highlight row
+  document.querySelectorAll('.chat-row').forEach(r => r.classList.remove('active'));
+  const row = document.getElementById('row-'+u);
+  if (row) row.classList.add('active');
 
   // Render messages
   const wrap = document.getElementById('messages');
-  wrap.innerHTML = '<div class="date-divider">Today</div>';
+  wrap.innerHTML = `
+    <div class="chat-bg-note">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+      Messages are end-to-end encrypted
+    </div>
+    <div class="date-chip">Today</div>`;
 
-  if (chats[username].messages.length === 0) {
-    wrap.innerHTML += `<div class="welcome-msg"><div class="welcome-bubble">👋 Say hi to ${username}!</div></div>`;
+  if (chats[u].msgs.length === 0) {
+    wrap.innerHTML += `<div class="sys-note">Say hi to ${u}! 👋</div>`;
   } else {
-    chats[username].messages.forEach(m => renderMessage(m));
+    chats[u].msgs.forEach(m => renderBubble(m));
   }
 
-  scrollToBottom();
-  refreshChatList();
+  scrollBottom();
+  refreshList();
   document.getElementById('msgInput').focus();
 }
 
-// ─── RENDER MESSAGE ───
-function renderMessage(m) {
+// ── Render bubble ──
+function renderBubble(m) {
   const wrap = document.getElementById('messages');
-  // Remove welcome msg
-  const welcome = wrap.querySelector('.welcome-msg');
-  if (welcome) welcome.remove();
+  // Remove "say hi" note
+  const note = wrap.querySelector('.sys-note');
+  if (note) note.remove();
 
-  const time = new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  const color = avatarColor(m.from);
-  const initial = m.from[0].toUpperCase();
-
+  const time = new Date(m.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   const div = document.createElement('div');
-  div.className = 'msg ' + (m.mine ? 'sent' : 'received');
+  div.className = `msg-wrap ${m.mine?'out':'in'}`;
   div.innerHTML = `
-    <div class="msg-avatar-sm" style="background:${color}">${initial}</div>
-    <div>
-      <div class="msg-bubble">${escHtml(m.text)}</div>
-      <div class="msg-time">${time}${m.mine ? ' <span class="tick delivered">✓✓</span>' : ''}</div>
+    <div class="bubble">
+      <div class="btext">${escHtml(m.text)}</div>
+      <div class="bmeta">
+        <span class="btime">${time}</span>
+        ${m.mine ? '<span class="btick read">✓✓</span>' : ''}
+      </div>
     </div>`;
   wrap.appendChild(div);
 }
 
-// ─── SEND MESSAGE ───
+// ── Send ──
 function sendMsg() {
   const input = document.getElementById('msgInput');
   const text = input.value.trim();
   if (!text || !currentChat) return;
   if (!ws || ws.readyState !== WebSocket.OPEN) {
-    showToast('⚠️ Not connected! Reconnecting...', '#ff6584');
-    connectWebSocket(); return;
+    showToast('Not connected! Reconnecting...', 'error');
+    connectWS(); return;
   }
-
-  wsSend({ type: 'private_msg', to: currentChat, text });
+  wsSend({ type:'private_msg', to:currentChat, text });
   input.value = '';
   input.style.height = 'auto';
   hideEmoji();
 }
 
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
-}
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
-}
+function handleKey(e) { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
 
-// ─── REFRESH CHAT LIST ───
-function refreshChatList() {
+// ── Refresh list ──
+function refreshList() {
   const list = document.getElementById('chatList');
-  const sorted = Object.entries(chats).sort((a,b) => (b[1].lastTime||0) - (a[1].lastTime||0));
-
-  if (sorted.length === 0) {
-    list.innerHTML = `<div class="empty-chats"><div style="font-size:48px;margin-bottom:12px">💬</div><p>No conversations yet</p><p style="font-size:12px;margin-top:4px">Tap ✏️ to start chatting!</p></div>`;
+  const sorted = Object.entries(chats).sort((a,b)=>(b[1].lastTime||0)-(a[1].lastTime||0));
+  if (!sorted.length) {
+    list.innerHTML = `<div class="empty-state"><svg width="48" height="48" viewBox="0 0 24 24" fill="#ccc"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg><p>No chats yet</p><span>Tap the icon above to start</span></div>`;
     return;
   }
-
   list.innerHTML = '';
-  sorted.forEach(([username, data]) => {
-    const color = avatarColor(username);
-    const initial = username[0].toUpperCase();
+  sorted.forEach(([u, data]) => {
+    const color = avatarColor(u);
     const time = data.lastTime ? timeAgo(data.lastTime) : '';
-    const isActive = currentChat === username;
-
-    const item = document.createElement('div');
-    item.className = 'chat-item' + (isActive ? ' active' : '') + (data.unread ? ' unread' : '');
-    item.id = 'ci-' + username;
-    item.onclick = () => openChat(username);
-    item.innerHTML = `
-      <div class="chat-avatar${data.online ? ' online' : ''}" style="background:${color}">${initial}</div>
-      <div class="chat-info">
-        <div class="chat-name">${escHtml(username)}</div>
-        <div class="chat-preview">${escHtml(data.lastMsg || 'Start chatting!')}</div>
-      </div>
-      <div class="chat-meta">
-        <span class="chat-time">${time}</span>
-        ${data.unread ? `<span class="badge">${data.unread}</span>` : ''}
+    const active = currentChat === u;
+    const row = document.createElement('div');
+    row.className = 'chat-row' + (active?' active':'');
+    row.id = 'row-'+u;
+    row.onclick = () => openChat(u);
+    row.innerHTML = `
+      <div class="av" style="background:${color}">${u[0].toUpperCase()}</div>
+      <div class="info">
+        <div class="row1">
+          <span class="name">${escHtml(u)}</span>
+          <span class="time">${time}</span>
+        </div>
+        <div class="row2">
+          <span class="preview">${escHtml(data.lastMsg||'Tap to chat')}</span>
+          ${data.unread ? `<span class="badge">${data.unread}</span>` : ''}
+        </div>
       </div>`;
-    list.appendChild(item);
+    list.appendChild(row);
   });
 }
 
-// ─── SYSTEM MESSAGE ───
-function appendSysMsg(text) {
-  if (!currentChat) return;
+function appendSys(text) {
   const wrap = document.getElementById('messages');
-  const div = document.createElement('div');
-  div.className = 'sys-msg';
-  div.textContent = text;
-  wrap.appendChild(div);
-  scrollToBottom();
+  const d = document.createElement('div');
+  d.className = 'sys-note';
+  d.textContent = text;
+  wrap.appendChild(d);
+  scrollBottom();
 }
 
-// ─── TYPING INDICATOR ───
-let typingTimeout = null;
-function removeTyping() {
-  const t = document.getElementById('messages').querySelector('.typing-indicator');
-  if (t) t.remove();
-}
-
-// ─── EMOJI PICKER ───
-function buildEmojiPicker() {
+// ── Emoji ──
+function buildEmojis() {
   const grid = document.getElementById('emojiGrid');
   EMOJIS.forEach(e => {
-    const span = document.createElement('span');
-    span.textContent = e;
-    span.onclick = () => {
-      const input = document.getElementById('msgInput');
-      input.value += e;
-      input.focus();
-    };
-    grid.appendChild(span);
+    const s = document.createElement('span');
+    s.textContent = e;
+    s.onclick = () => { document.getElementById('msgInput').value += e; document.getElementById('msgInput').focus(); };
+    grid.appendChild(s);
   });
 }
-function toggleEmoji() {
-  document.getElementById('emojiPicker').classList.toggle('hidden');
-}
-function hideEmoji() {
-  document.getElementById('emojiPicker').classList.add('hidden');
-}
-document.addEventListener('click', e => {
-  const picker = document.getElementById('emojiPicker');
-  const btn = document.querySelector('.emoji-btn');
-  if (picker && btn && !picker.contains(e.target) && !btn.contains(e.target)) hideEmoji();
-});
+function toggleEmoji() { document.getElementById('emojiPanel').classList.toggle('hidden'); }
+function hideEmoji() { document.getElementById('emojiPanel').classList.add('hidden'); }
 
-// ─── TABS ───
-let currentTab = 'all';
-function switchTab(el, tab) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  currentTab = tab;
-}
-
-// ─── SEARCH ───
+// ── Search ──
 function filterChats(q) {
-  document.querySelectorAll('.chat-item').forEach(item => {
-    const name = item.querySelector('.chat-name')?.textContent.toLowerCase() || '';
-    item.style.display = name.includes(q.toLowerCase()) ? '' : 'none';
+  document.querySelectorAll('.chat-row').forEach(r => {
+    const name = r.querySelector('.name')?.textContent.toLowerCase()||'';
+    r.style.display = name.includes(q.toLowerCase()) ? '' : 'none';
   });
 }
 
-// ─── NAV ───
-function setNav(el) {
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  el.classList.add('active');
-}
-
-// ─── BACK ───
-function backToList() {
+// ── Close chat (mobile) ──
+function closeChat() {
   document.getElementById('app').classList.remove('chat-open');
   currentChat = '';
+  document.getElementById('chatArea').classList.add('hidden');
+  document.getElementById('noChat').style.display = '';
 }
 
-// ─── UTILS ───
-function avatarColor(username) {
-  const colors = ['#6c63ff','#ff6584','#43e97b','#f7971e','#0072ff','#ee0979','#11998e','#8e2de2'];
-  let hash = 0;
-  for (let c of username) hash = c.charCodeAt(0) + ((hash<<5) - hash);
-  return colors[Math.abs(hash) % colors.length];
+// ── Toast ──
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type}`;
+  setTimeout(() => t.className='toast hidden', 3000);
+}
+
+// ── Utils ──
+function avatarColor(u) {
+  const colors = ['#075E54','#25D366','#128C7E','#34B7F1','#FF6B6B','#845EC2','#FF9671','#00C9A7'];
+  let h = 0;
+  for (let c of u) h = c.charCodeAt(0) + ((h<<5)-h);
+  return colors[Math.abs(h)%colors.length];
 }
 
 function timeAgo(ts) {
-  const diff = Date.now() - ts;
-  if (diff < 60000) return 'now';
-  if (diff < 3600000) return Math.floor(diff/60000) + 'm';
-  if (diff < 86400000) return Math.floor(diff/3600000) + 'h';
-  return Math.floor(diff/86400000) + 'd';
+  const d = Date.now()-ts;
+  if (d < 60000) return 'now';
+  if (d < 3600000) return Math.floor(d/60000)+'m';
+  if (d < 86400000) return Math.floor(d/3600000)+'h';
+  return new Date(ts).toLocaleDateString([],{day:'2-digit',month:'2-digit'});
 }
 
-function scrollToBottom() {
-  const wrap = document.getElementById('messages');
-  setTimeout(() => wrap.scrollTop = wrap.scrollHeight, 50);
+function scrollBottom() {
+  const w = document.getElementById('messages');
+  setTimeout(() => w.scrollTop=w.scrollHeight, 50);
 }
 
-function escHtml(text) {
-  return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-   
+function escHtml(t) {
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+     }
