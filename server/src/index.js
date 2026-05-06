@@ -4,7 +4,7 @@ const http = require("http");
 const path = require("path");
 const express = require("express");
 const mongoose = require("mongoose");
-const { setupWSServer } = require("./wsserver");
+const { setupWSServer } = require("./wsServer");
 
 const PORT = process.env.PORT || 10000;
 
